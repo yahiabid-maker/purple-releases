@@ -1,6 +1,6 @@
 # Purple — vidéo TikTok (20 s)
 
-Vidéo verticale 1080 × 1920, 60 i/s, 20 s, sans audio (la musique s'ajoute dans TikTok).
+Vidéo verticale 1080 × 1920, 60 i/s, 22 s, sans audio (la musique s'ajoute dans TikTok).
 Projet [Remotion](https://www.remotion.dev) autonome, séparé du dépôt de l'appli.
 
 ## Installer
@@ -68,6 +68,16 @@ Le tracé vient des données « f1-circuits » de Tomislav Bacinger (licence MIT
 (S1 jusqu'aux Combes, S2 jusqu'à la sortie de Stavelot) sont approximatives et se règlent
 dans `src/lib/spa.ts`.
 
+## Vidéo de l'arrêt aux stands
+
+La séquence de 2 à 4 s lit **`public/pitstop.mp4`** (extrait à partir de 3,6 s, à 1,2×, sans le son),
+en fondu enchaîné entre l'accroche et la photo aérienne. Sa légende est la prop `pitStopCaption`.
+Pour changer de vidéo, remplace le fichier ou la prop `pitStopVideo` (`""` pour s'en passer ;
+l'extrait se règle dans `src/scenes/SceneB_PitStop.tsx`).
+
+**Droits** : cette vidéo vient de Pinterest et montre une monoplace et une équipe identifiables.
+Elle n'est pas versionnée. Avant publication, obtiens les droits ou remplace-la.
+
 ## Images de contrôle
 
 ```console
@@ -94,8 +104,7 @@ Le calque de zones s'active aussi dans le Studio avec la prop `showSafeZones`.
 | `src/components/GlassCard.tsx` | Carte en verre dépoli |
 | `src/components/Neon.tsx` | Pastille néon (micro), cercles lumineux qui s'agrandissent |
 | `src/components/Bloom.tsx` | Transition « éclosion » de la scène 3 vers la scène 4 |
-| `src/components/PanTransition.tsx`, `src/lib/pan.ts` | Transition 1 → 2 vue de dessus : travelling sur l'asphalte fléché, passage de la monoplace |
-| `src/components/CarTopDown.tsx` | Monoplace générique vue de dessus, livrée violette (aucune marque) |
+| `src/scenes/SceneB_PitStop.tsx` | Arrêt aux stands (2–4 s) : vidéo en fondu enchaîné, étalonnage, légende |
 | `src/components/LiquidWipe.tsx` | Transition liquide de la scène 5 vers la scène 6 |
 | `src/components/Hud.tsx` | Équerres discrètes aux coins de la zone utile |
 | `src/components/SafeZones.tsx` | Calque de contrôle des zones TikTok |
@@ -103,7 +112,7 @@ Le calque de zones s'active aussi dans le Studio avec la prop `showSafeZones`.
 | `src/lib/track.ts` | Mise à l'échelle et lissage du tracé, projection 3D des étiquettes |
 
 Rythme : un temps = 30 images, une mesure = 2 s. Les changements de scène tombent sur
-0, 2, 6, 10, 14 et 17 s ; à l'intérieur des scènes, les événements tombent sur les temps.
+0, 2, 4, 8, 12, 16 et 19 s ; à l'intérieur des scènes, les événements tombent sur les temps.
 
 ## Licence Remotion
 

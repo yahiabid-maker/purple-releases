@@ -1,8 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from "remotion";
 import { KineticTitle, estimateTitleHeight, titleLastWord } from "../components/Kinetic";
-import { CLAMP, smooth, tween } from "../lib/anim";
-import { PAN, panAt, panBlur } from "../lib/pan";
+import { CLAMP, EASE_IN_OUT, smooth, tween } from "../lib/anim";
 import { COLORS, CONTENT, HEIGHT, SCENES, WIDTH, rgba } from "../theme";
 
 const DURATION = SCENES.hook.duration;
@@ -47,13 +46,11 @@ export const SceneHook: React.FC<{ hook: string[] }> = ({ hook }) => {
   // Tant que le 2e bloc n'est pas là, le 1er reste centré ; il remonte quand le 2e arrive.
   const shift = b ? (1 - smooth(frame, timing.startB - 4)) * ((BLOCK_GAP + hB) / 2) : 0;
 
-  // Sortie : la caméra file vers le bas (travelling vertical vers la scène 2).
-  const exit = 0;
-  const pan = panAt(frame);
-  const blur = panBlur(frame);
+  // Sortie : fondu enchaîné vers l'arrêt aux stands, avec une très légère poussée.
+  const exit = tween(frame, DURATION - 14, DURATION - 1, EASE_IN_OUT);
 
   return (
-    <AbsoluteFill style={{ transform: `translate3d(0, ${-pan}px, 0)`, filter: blur > 0.5 ? "url(#panBlur)" : undefined }}>
+    <AbsoluteFill style={{ opacity: 1 - exit, transform: `scale(${1 + 0.04 * exit})` }}>
       {/* Rémanence : la lumière de la ligne s'éteint doucement en bas de l'écran. */}
       <div
         style={{
@@ -63,7 +60,7 @@ export const SceneHook: React.FC<{ hook: string[] }> = ({ hook }) => {
           top: HEIGHT - 620,
           height: 900,
           background: `radial-gradient(closest-side, ${rgba(COLORS.violet, 0.34)} 0%, ${rgba(COLORS.violet, 0.1)} 55%, ${rgba(COLORS.violet, 0)} 100%)`,
-          opacity: interpolate(frame, [FALL_FRAMES - 10, FALL_FRAMES + 2, DURATION], [0, 1, 0.4], CLAMP) * (1 - tween(frame, PAN.from, PAN.from + 14)),
+          opacity: interpolate(frame, [FALL_FRAMES - 10, FALL_FRAMES + 2, DURATION], [0, 1, 0.4], CLAMP),
         }}
       />
 
@@ -73,10 +70,9 @@ export const SceneHook: React.FC<{ hook: string[] }> = ({ hook }) => {
           left: CONTENT.x,
           top,
           width: CONTENT.w,
-          opacity: 1 - exit,
-          transform: `scale(${1 + 0.14 * exit})`,
+          opacity: 1,
+          transform: undefined,
           transformOrigin: `50% ${total / 2}px`,
-          filter: exit > 0.01 ? `blur(${(exit * 14).toFixed(2)}px)` : undefined,
         }}
       >
         <KineticTitle

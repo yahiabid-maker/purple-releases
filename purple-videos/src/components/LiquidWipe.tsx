@@ -1,7 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from "remotion";
 import { CLAMP, tween } from "../lib/anim";
-import { COLORS, HEIGHT, WIDTH } from "../theme";
+import { COLORS, HEIGHT, SCENES, WIDTH } from "../theme";
 
 /**
  * Transition liquide (débrief → signature) : une nappe violette entre par la gauche
@@ -9,7 +9,7 @@ import { COLORS, HEIGHT, WIDTH } from "../theme";
  * filaments horizontaux qui se cassent en gouttelettes et s'évanouissent.
  * La coupure entre les deux scènes tombe pendant que l'écran est couvert (image 16).
  */
-export const LIQUID = { from: 1004, duration: 50 };
+export const LIQUID = { from: SCENES.outro.from - 16, duration: 50 };
 
 const STEP = 8;
 const YS = Array.from({ length: Math.ceil((HEIGHT + 120) / STEP) + 1 }, (_, i) => -60 + i * STEP);

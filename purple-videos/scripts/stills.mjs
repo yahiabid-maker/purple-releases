@@ -13,12 +13,14 @@ const FPS = 60;
 // [nom, début (s), fin (s)] — même découpage que SCENES dans src/theme.ts
 const SCENES = [
   ["scene-1-accroche", 0, 2],
-  ["scene-2-trace", 2, 6],
-  ["scene-3-delta", 6, 10],
-  ["scene-4-coach", 10, 14],
-  ["scene-5-debrief", 14, 17],
-  ["scene-6-signature", 17, 20],
+  ["scene-1b-stand", 2, 4],
+  ["scene-2-trace", 4, 8],
+  ["scene-3-delta", 8, 12],
+  ["scene-4-coach", 12, 16],
+  ["scene-5-debrief", 16, 19],
+  ["scene-6-signature", 19, 22],
 ];
+const END = 22;
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(`--${name}`);
@@ -33,7 +35,7 @@ const shots = [];
 for (const [name, from, to] of SCENES) {
   shots.push([`${name}-milieu`, Math.round(((from + to) / 2) * FPS)]);
   // État final : juste avant la sortie de scène (dernière image pour la signature).
-  if (flag("fin")) shots.push([`${name}-fin`, to === 20 ? 20 * FPS - 1 : to * FPS - 16]);
+  if (flag("fin")) shots.push([`${name}-fin`, to === END ? END * FPS - 1 : to * FPS - 16]);
 }
 
 for (const [name, frame] of shots) {

@@ -19,8 +19,11 @@
 export type DebriefRow = { label: string; delta: string };
 
 export type PurpleTikTokProps = {
-  /** Scène 1 — accroche en deux temps (le 2e arrive sur le temps de 1 s). */
+  /** Scène 1 — accroche en deux temps. */
   hook: string[];
+  /** Arrêt aux stands — vidéo dans public/ ("" pour s'en passer) et sa légende. */
+  pitStopVideo: string;
+  pitStopCaption: string;
   /** Scène 2 — tracé du circuit. */
   trackTitle: string;
   /** Photo aérienne d'ouverture de la scène 2, dans public/ ("" pour s'en passer). */
@@ -52,6 +55,9 @@ export type PurpleTikTokProps = {
 
 export const defaultTexts: PurpleTikTokProps = {
   hook: ["Tu perds\n# du temps.", "# *Purple*\nsait où."],
+
+  pitStopVideo: "pitstop.mp4",
+  pitStopCaption: "Au stand, tout se joue\n# au *dixième*.",
 
   trackTitle: "Chaque virage\n# *analysé.*",
   trackPhoto: "photo-circuit.jpg",
