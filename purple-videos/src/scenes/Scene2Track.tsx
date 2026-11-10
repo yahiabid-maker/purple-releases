@@ -289,7 +289,8 @@ export const SceneTrack: React.FC<{ title: string; photo: string }> = ({ title, 
           right: 0,
           top: 0,
           height: 860,
-          opacity: Math.max(photoOpacity, 1 - tween(frame, DEZOOM.to - 10, DEZOOM.to + 20, EASE_IN_OUT)),
+          // Entre en fondu avec la photo : la scène précédente (vidéo du stand) est encore visible dessous.
+          opacity: tween(frame, 0, PHOTO.in, EASE_IN_OUT) * Math.max(photoOpacity, 1 - tween(frame, DEZOOM.to - 10, DEZOOM.to + 20, EASE_IN_OUT)),
           background: `linear-gradient(180deg, ${rgba(COLORS.bg, 0.96)} 0%, ${rgba(COLORS.bg, 0.88)} 52%, ${rgba(COLORS.bg, 0)} 100%)`,
         }}
       />
