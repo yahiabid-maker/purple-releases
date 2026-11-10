@@ -23,7 +23,7 @@ export const PurpleTikTok: React.FC<PurpleTikTokProps> = (props) => {
         <SceneHook hook={props.hook} />
       </Sequence>
       <Sequence name="2 · Tracé du circuit" from={SCENES.track.from} durationInFrames={SCENES.track.duration}>
-        <SceneTrack title={props.trackTitle} />
+        <SceneTrack title={props.trackTitle} photo={props.trackPhoto} />
       </Sequence>
       <Sequence name="3 · Delta et secteurs" from={SCENES.delta.from} durationInFrames={SCENES.delta.duration}>
         <SceneDelta title={props.deltaTitle} label={props.deltaLabel} value={props.deltaValue} sectors={props.sectors} echo={props.deltaEcho} />

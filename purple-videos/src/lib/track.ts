@@ -1,92 +1,52 @@
 /**
- * Tracé de circuit INVENTÉ pour la scène 2 : un polygone dessiné à la main dont
- * les sommets sont arrondis. Il ne reprend aucun circuit existant.
- * Repère local : boîte de 860 × 900 px.
+ * Tracé du circuit de la scène 2 : le vrai tracé de Spa-Francorchamps (voir spa.ts),
+ * ajusté dans une boîte de 856 × 1000 px, lissé (Catmull-Rom) et mesuré pour pouvoir
+ * placer un point à n'importe quelle fraction du tour.
  */
+import { SPA_CORNERS, SPA_POINTS, SPA_SECTORS, SPA_SIZE } from "./spa";
 
 export type Pt = { x: number; y: number };
-type Vertex = Pt & { r: number };
 
-export const TRACK_BOX = { w: 860, h: 900 };
-
-/** Point de départ / ligne d'arrivée, sur la ligne droite du bas. */
-const START: Pt = { x: 240, y: 846 };
-
-/** Sommets parcourus dans le sens du tour ; r = longueur du raccord arrondi. */
-const VERTICES: Vertex[] = [
-  { x: 700, y: 846, r: 90 },
-  { x: 810, y: 700, r: 50 },
-  { x: 770, y: 470, r: 140 },
-  { x: 560, y: 380, r: 40 },
-  { x: 640, y: 220, r: 40 },
-  { x: 800, y: 180, r: 40 },
-  { x: 760, y: 50, r: 40 },
-  { x: 250, y: 50, r: 80 },
-  { x: 60, y: 200, r: 60 },
-  { x: 210, y: 380, r: 60 },
-  { x: 480, y: 560, r: 60 },
-  { x: 330, y: 680, r: 40 },
-  { x: 140, y: 560, r: 50 },
-  { x: 50, y: 700, r: 60 },
-  { x: 90, y: 846, r: 50 },
-];
-
-/** Les trois virages mis en avant (indices dans VERTICES), dans l'ordre du tour. */
-const HIGHLIGHTED = [3, 8, 11];
+export const TRACK_BOX = { w: 856, h: 1000 };
+const MARGIN = 40;
 
 const sub = (a: Pt, b: Pt): Pt => ({ x: a.x - b.x, y: a.y - b.y });
 const add = (a: Pt, b: Pt, k = 1): Pt => ({ x: a.x + b.x * k, y: a.y + b.y * k });
 const len = (a: Pt) => Math.hypot(a.x, a.y);
-const unit = (a: Pt): Pt => {
-  const l = len(a) || 1;
-  return { x: a.x / l, y: a.y / l };
-};
-const quad = (a: Pt, c: Pt, b: Pt, t: number): Pt => ({
-  x: (1 - t) * (1 - t) * a.x + 2 * (1 - t) * t * c.x + t * t * b.x,
-  y: (1 - t) * (1 - t) * a.y + 2 * (1 - t) * t * c.y + t * t * b.y,
-});
 const fmt = (p: Pt) => `${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
+const cubic = (a: Pt, b: Pt, c: Pt, d: Pt, t: number): Pt => {
+  const u = 1 - t;
+  return {
+    x: u * u * u * a.x + 3 * u * u * t * b.x + 3 * u * t * t * c.x + t * t * t * d.x,
+    y: u * u * u * a.y + 3 * u * u * t * b.y + 3 * u * t * t * c.y + t * t * t * d.y,
+  };
+};
 
 const build = () => {
-  const n = VERTICES.length;
-  let d = `M ${fmt(START)}`;
-  const samples: Pt[] = [START];
-  const corners: { index: number; apex: Pt; path: string; sampleIndex: number }[] = [];
+  const scale = Math.min((TRACK_BOX.w - 2 * MARGIN) / SPA_SIZE.w, (TRACK_BOX.h - 2 * MARGIN) / SPA_SIZE.h);
+  const ox = (TRACK_BOX.w - SPA_SIZE.w * scale) / 2;
+  const oy = (TRACK_BOX.h - SPA_SIZE.h * scale) / 2;
+  const P: Pt[] = SPA_POINTS.map(([x, y]) => ({ x: ox + x * scale, y: oy + y * scale }));
+  const n = P.length;
+  const at = (i: number) => P[((i % n) + n) % n];
 
+  // Boucle fermée lissée : chaque segment devient une courbe de Bézier (Catmull-Rom).
+  let d = `M ${fmt(P[0])}`;
+  const samples: Pt[] = [P[0]];
   for (let i = 0; i < n; i++) {
-    const v = VERTICES[i];
-    const prev = i === 0 ? START : VERTICES[i - 1];
-    const next = i === n - 1 ? START : VERTICES[i + 1];
-    const dirIn = unit(sub(v, prev));
-    const dirOut = unit(sub(next, v));
-    const rIn = Math.min(v.r, len(sub(v, prev)) * 0.46);
-    const rOut = Math.min(v.r, len(sub(next, v)) * 0.46);
-    const a = add(v, dirIn, -rIn);
-    const b = add(v, dirOut, rOut);
-    d += ` L ${fmt(a)} Q ${fmt(v)} ${fmt(b)}`;
-
-    samples.push(a);
-    const apexSample = samples.length + 11;
-    for (let s = 1; s <= 24; s++) samples.push(quad(a, v, b, s / 24));
-
-    // Portion mise en couleur : le raccord, prolongé de 34 px de chaque côté.
-    const pre = add(a, dirIn, -34);
-    const post = add(b, dirOut, 34);
-    corners.push({
-      index: i,
-      apex: quad(a, v, b, 0.5),
-      path: `M ${fmt(pre)} L ${fmt(a)} Q ${fmt(v)} ${fmt(b)} L ${fmt(post)}`,
-      sampleIndex: apexSample,
-    });
+    const p0 = at(i - 1);
+    const p1 = at(i);
+    const p2 = at(i + 1);
+    const p3 = at(i + 2);
+    const b1 = add(p1, sub(p2, p0), 1 / 6);
+    const b2 = add(p2, sub(p3, p1), -1 / 6);
+    d += ` C ${fmt(b1)} ${fmt(b2)} ${fmt(p2)}`;
+    for (let s = 1; s <= 6; s++) samples.push(cubic(p1, b1, b2, p2, s / 6));
   }
-  d += ` L ${fmt(START)}`;
-  samples.push(START);
+  d += " Z";
 
-  // Longueurs cumulées, pour placer un point à n'importe quelle fraction du tour.
   const cumulative = [0];
-  for (let i = 1; i < samples.length; i++) {
-    cumulative.push(cumulative[i - 1] + len(sub(samples[i], samples[i - 1])));
-  }
+  for (let i = 1; i < samples.length; i++) cumulative.push(cumulative[i - 1] + len(sub(samples[i], samples[i - 1])));
   const total = cumulative[cumulative.length - 1];
 
   const pointAt = (fraction: number): Pt => {
@@ -94,19 +54,50 @@ const build = () => {
     let i = 1;
     while (i < cumulative.length - 1 && cumulative[i] < target) i++;
     const span = cumulative[i] - cumulative[i - 1] || 1;
-    const k = (target - cumulative[i - 1]) / span;
-    return add(samples[i - 1], sub(samples[i], samples[i - 1]), k);
+    return add(samples[i - 1], sub(samples[i], samples[i - 1]), (target - cumulative[i - 1]) / span);
   };
+
+  const centroid = P.reduce((c, p) => ({ x: c.x + p.x / n, y: c.y + p.y / n }), { x: 0, y: 0 });
+  const tangent = sub(at(1), at(-1));
+  const t = len(tangent) || 1;
 
   return {
     d,
-    start: START,
     pointAt,
-    corners: HIGHLIGHTED.map((index) => {
-      const c = corners[index];
-      return { apex: c.apex, path: c.path, fraction: cumulative[c.sampleIndex] / total };
-    }),
+    centroid,
+    start: P[0],
+    /** Direction perpendiculaire à la piste sur la ligne de départ. */
+    startNormal: { x: -tangent.y / t, y: tangent.x / t },
+    corners: SPA_CORNERS.map((c) => ({ name: c.name, fraction: c.at, apex: pointAt(c.at) })),
+    sectors: SPA_SECTORS,
   };
 };
 
 export const TRACK = build();
+
+/**
+ * Projette un point du plan du circuit (coordonnées de la boîte) à l'écran, avec la même
+ * caméra CSS que la scène 2 : perspective sur le parent, puis rotateX · rotateZ · scale.
+ * Sert à poser des étiquettes droites (non inclinées) au-dessus du plan 3D.
+ */
+export const projectOnStage = (
+  p: Pt,
+  cam: { tilt: number; spin: number; zoom: number },
+  { perspective = 1500, origin = { x: 0.5, y: 0.55 }, eye = { x: 0.5, y: 0.2 } } = {},
+): Pt => {
+  const ox = TRACK_BOX.w * origin.x;
+  const oy = TRACK_BOX.h * origin.y;
+  const x0 = (p.x - ox) * cam.zoom;
+  const y0 = (p.y - oy) * cam.zoom;
+  const s = (cam.spin * Math.PI) / 180;
+  const x1 = x0 * Math.cos(s) - y0 * Math.sin(s);
+  const y1 = x0 * Math.sin(s) + y0 * Math.cos(s);
+  const r = (cam.tilt * Math.PI) / 180;
+  const x2 = x1 + ox;
+  const y2 = y1 * Math.cos(r) + oy;
+  const z2 = y1 * Math.sin(r);
+  const ex = TRACK_BOX.w * eye.x;
+  const ey = TRACK_BOX.h * eye.y;
+  const k = perspective / (perspective - z2);
+  return { x: ex + (x2 - ex) * k, y: ey + (y2 - ey) * k };
+};

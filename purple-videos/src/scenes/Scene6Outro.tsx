@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { AbsoluteFill, Img, continueRender, delayRender, staticFile, useCurrentFrame } from "remotion";
+import React from "react";
+import { AbsoluteFill, Img, staticFile, useCurrentFrame } from "remotion";
 import { KineticTitle } from "../components/Kinetic";
 import { Ring } from "../components/Neon";
 import { FONT_TEXT, FONT_TITLE } from "../fonts";
 import { EASE_IN_OUT, rise, smooth, tween } from "../lib/anim";
+import { useStaticFile } from "../lib/useStaticFile";
 import { BEAT, CENTER_X, COLORS, CONTENT, HEIGHT, rgba } from "../theme";
 
 /** Signature sur la mesure de 18 s, appel à l'action un demi-temps plus tard, « tap » à 19 s. */
@@ -14,24 +15,7 @@ const TAP_AT = 4 * BEAT - 4;
 const LOGO_FILE = "logo.svg";
 const LOGO_Y = 620;
 
-/**
- * Le logo est le fichier public/logo.svg fourni par Purple : il est affiché tel
- * quel, jamais redessiné. S'il est absent, on affiche le nom en texte à la place.
- */
-const useLogo = () => {
-  const [status, setStatus] = useState<"loading" | "ready" | "missing">("loading");
-  const [handle] = useState(() => delayRender("Recherche de public/logo.svg"));
-  useEffect(() => {
-    fetch(staticFile(LOGO_FILE))
-      .then((res) => {
-        const type = res.headers.get("content-type") ?? "";
-        setStatus(res.ok && type.includes("svg") ? "ready" : "missing");
-      })
-      .catch(() => setStatus("missing"))
-      .finally(() => continueRender(handle));
-  }, [handle]);
-  return status;
-};
+/** Le logo est le fichier public/logo.svg fourni par Purple : affiché tel quel, jamais redessiné. */
 
 /**
  * Scène 6 (17–20 s) : un faisceau de lumière descend sur le logo, au-dessus d'un
@@ -40,7 +24,7 @@ const useLogo = () => {
  */
 export const SceneOutro: React.FC<{ tagline: string; cta: string; logoFallback: string }> = ({ tagline, cta, logoFallback }) => {
   const frame = useCurrentFrame();
-  const logo = useLogo();
+  const logo = useStaticFile(LOGO_FILE, "svg");
   const beam = tween(frame, 0, 30, EASE_IN_OUT);
   const logoIn = smooth(frame, 8);
   const horizon = tween(frame, 6, 50, EASE_IN_OUT);

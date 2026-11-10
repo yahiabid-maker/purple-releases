@@ -54,6 +54,20 @@ Dépose ton fichier dans **`public/logo.svg`**. Il est affiché tel quel dans la
 redessiné. Tant que le fichier est absent, la scène affiche le nom « Purple » en texte à la place
 (prop `logoFallback`).
 
+## Photo et circuit de la scène 2
+
+La scène 2 s'ouvre sur **`public/photo-circuit.jpg`** (photo aérienne), qui se fond dans le
+tracé réel de Spa-Francorchamps. Pour changer de photo, remplace ce fichier ou change la prop
+`trackPhoto` dans `src/texts.ts` (`""` pour s'en passer).
+
+**Droits** : cette photo vient de Pinterest, son auteur n'est pas identifié. Avant toute
+publication, obtiens une licence ou remplace-la par une photo dont tu as les droits.
+
+Le tracé vient des données « f1-circuits » de Tomislav Bacinger (licence MIT,
+<https://github.com/bacinger/f1-circuits>), non officielles. Les limites de secteurs
+(S1 jusqu'aux Combes, S2 jusqu'à la sortie de Stavelot) sont approximatives et se règlent
+dans `src/lib/spa.ts`.
+
 ## Images de contrôle
 
 ```console
@@ -82,7 +96,8 @@ Le calque de zones s'active aussi dans le Studio avec la prop `showSafeZones`.
 | `src/components/Bloom.tsx` | Transition « éclosion » de la scène 3 vers la scène 4 |
 | `src/components/Hud.tsx` | Équerres discrètes aux coins de la zone utile |
 | `src/components/SafeZones.tsx` | Calque de contrôle des zones TikTok |
-| `src/lib/track.ts` | Tracé du circuit inventé de la scène 2 |
+| `src/lib/spa.ts` | Tracé réel de Spa-Francorchamps, virages mis en avant, limites de secteurs |
+| `src/lib/track.ts` | Mise à l'échelle et lissage du tracé, projection 3D des étiquettes |
 
 Rythme : un temps = 30 images, une mesure = 2 s. Les changements de scène tombent sur
 0, 2, 6, 10, 14 et 17 s ; à l'intérieur des scènes, les événements tombent sur les temps.

@@ -23,6 +23,8 @@ export type PurpleTikTokProps = {
   hook: string[];
   /** Scène 2 — tracé du circuit. */
   trackTitle: string;
+  /** Photo aérienne d'ouverture de la scène 2, dans public/ ("" pour s'en passer). */
+  trackPhoto: string;
   /** Scène 3 — carte delta. */
   deltaTitle: string;
   deltaLabel: string;
@@ -52,6 +54,7 @@ export const defaultTexts: PurpleTikTokProps = {
   hook: ["Tu perds\n# du temps.", "# *Purple*\nsait où."],
 
   trackTitle: "Chaque virage\n# *analysé.*",
+  trackPhoto: "photo-circuit.jpg",
 
   deltaTitle: "Fais tomber des secteurs\n# [jaunes.|verts.|violets.]",
   deltaLabel: "Delta",
