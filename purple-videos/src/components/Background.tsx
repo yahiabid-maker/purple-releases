@@ -1,7 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Img, interpolate, random, useCurrentFrame } from "remotion";
 import { CLAMP, EASE_IN_OUT } from "../lib/anim";
-import { COLORS, HEIGHT, SCENES, WIDTH, rgba } from "../theme";
+import { BEAT, COLORS, HEIGHT, SCENES, WIDTH, rgba } from "../theme";
 
 /**
  * Fond continu sur les 20 s : lueurs violettes floues qui dérivent lentement et
@@ -32,40 +32,48 @@ type Orb = {
 //                      scène :   1     2     3     4     5     6
 const ORBS: Orb[] = [
   {
+    // Grande lueur principale, derrière le sujet de chaque scène.
     color: COLORS.violet,
-    x: [540, 720, 830, 230, 800, 540],
-    y: [960, 1080, 800, 880, 520, 610],
-    size: [900, 1180, 1120, 1180, 1160, 1040],
-    alpha: [0, 0.46, 0.5, 0.5, 0.46, 0.4],
+    x: [510, 510, 860, 510, 900, 510],
+    y: [960, 1060, 640, 740, 420, 560],
+    size: [900, 1100, 1000, 1100, 1100, 1000],
+    alpha: [0, 0.46, 0.45, 0.5, 0.42, 0.38],
     drift: [70, 13, 0],
   },
   {
     color: COLORS.violetLight,
-    x: [300, 150, 140, 900, 150, 540],
-    y: [500, 400, 1300, 500, 1280, 600],
-    size: [700, 760, 820, 780, 840, 600],
-    alpha: [0, 0.2, 0.22, 0.22, 0.22, 0.2],
+    x: [300, 80, 120, 950, 100, 510],
+    y: [500, 300, 1350, 300, 1400, 300],
+    size: [700, 700, 800, 700, 820, 600],
+    alpha: [0, 0.2, 0.22, 0.2, 0.22, 0.18],
     drift: [90, 17, 2.1],
   },
   {
+    // Lumière de coin, façon projecteur hors champ.
     color: COLORS.violet,
-    x: [800, 1000, 280, 820, 300, 540],
-    y: [1500, 1740, 220, 1560, 1640, 1500],
-    size: [800, 940, 820, 900, 880, 900],
-    alpha: [0, 0.3, 0.26, 0.3, 0.28, 0.2],
+    x: [800, 1000, 60, 100, 300, 510],
+    y: [1500, 1750, 140, 1700, 1650, 1550],
+    size: [800, 900, 900, 900, 880, 900],
+    alpha: [0, 0.3, 0.32, 0.3, 0.28, 0.25],
     drift: [80, 11, 4.2],
   },
   {
-    // Lueur plus serrée, à cheval sur le bord des cartes (scènes 3 à 5) : nette à
-    // l'extérieur, diffusée sous le verre — c'est elle qui rend le dépoli lisible.
+    // Lueur serrée posée sur le bord des cartes : nette dehors, diffusée sous le verre.
     color: COLORS.violetLight,
-    x: [540, 900, 912, 62, 918, 540],
-    y: [960, 700, 702, 398, 362, 620],
+    x: [540, 900, 930, 90, 930, 540],
+    y: [960, 700, 600, 330, 330, 620],
     size: [300, 300, 440, 440, 440, 300],
-    alpha: [0, 0, 0.62, 0.58, 0.6, 0],
+    alpha: [0, 0, 0.6, 0.55, 0.6, 0],
     drift: [34, 9, 1.2],
   },
 ];
+
+/** Pulsation sur chaque temps (120 BPM) : les lumières respirent avec la musique. */
+const beatPulse = (frame: number) => {
+  if (frame < SCENES.track.from) return 0;
+  const x = (frame % BEAT) / BEAT;
+  return Math.pow(1 - x, 3);
+};
 
 export const Background: React.FC = () => {
   const frame = useCurrentFrame();
@@ -78,7 +86,7 @@ export const Background: React.FC = () => {
         const size = perScene(frame, orb.size);
         const x = perScene(frame, orb.x) + Math.sin((t / period) * Math.PI * 2 + phase) * amp;
         const y = perScene(frame, orb.y) + Math.cos((t / (period * 1.3)) * Math.PI * 2 + phase) * amp * 0.8;
-        const alpha = perScene(frame, orb.alpha);
+        const alpha = perScene(frame, orb.alpha) * (1 + 0.12 * beatPulse(frame));
         if (alpha <= 0.001) return null;
         return (
           <div

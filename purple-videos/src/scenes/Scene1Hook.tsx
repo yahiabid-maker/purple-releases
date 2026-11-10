@@ -1,8 +1,7 @@
 import React from "react";
-import { AbsoluteFill, interpolate, interpolateColors, useCurrentFrame } from "remotion";
-import { Easing } from "remotion";
-import { RichText, titleStyle } from "../components/Text";
-import { CLAMP, rise, sceneExit, smooth } from "../lib/anim";
+import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from "remotion";
+import { KineticTitle, estimateTitleHeight, titleLastWord } from "../components/Kinetic";
+import { CLAMP, EASE_IN, smooth, tween } from "../lib/anim";
 import { COLORS, CONTENT, HEIGHT, SCENES, WIDTH, rgba } from "../theme";
 
 const DURATION = SCENES.hook.duration;
@@ -13,69 +12,45 @@ const fallAt = (frame: number) =>
   -60 +
   interpolate(frame, [0, FALL_FRAMES], [0, 1], { ...CLAMP, easing: Easing.bezier(0.5, 0, 0.78, 0.62) }) * (HEIGHT + 160);
 
-/** Le 2e temps de l'accroche part un peu avant le temps pour être posé dessus (1 s). */
-const SECOND_BEAT_START = 38;
+/**
+ * Le 1er bloc apparaît au passage de la ligne, le 2e enchaîne juste après.
+ * Le rythme des mots se resserre pour les accroches longues : tout doit être
+ * posé vers 1 s, au milieu de la scène.
+ */
+const BLOCK_A = 15;
+const LAST_WORD_BY = 50;
+const plan = (a: string, b: string | undefined, stagger: number) => {
+  const startB = titleLastWord(a, BLOCK_A, stagger) + 4;
+  const end = b ? titleLastWord(b, startB, stagger) : titleLastWord(a, BLOCK_A, stagger);
+  return { stagger, startB, end };
+};
+const BIG = 168;
+const SMALL = 64;
+const BLOCK_GAP = 30;
 
 /**
  * Scène 1 (0–2 s) : fond noir, une ligne violette tombe à travers l'écran comme
- * un chrono qui tombe, et révèle l'accroche sur son passage.
+ * un chrono qui tombe ; l'accroche se construit mot à mot dans son sillage.
  */
 export const SceneHook: React.FC<{ hook: string[] }> = ({ hook }) => {
   const frame = useCurrentFrame();
-  const exit = sceneExit(frame, DURATION);
   const lineY = fallAt(frame);
   const speed = fallAt(frame) - fallAt(frame - 1);
 
-  // Image à laquelle la ligne passe sur le texte : le texte y prend sa teinte violette, puis blanchit.
-  let passFrame = 0;
-  while (passFrame < FALL_FRAMES && fallAt(passFrame) < HEIGHT * 0.42) passFrame++;
-  const firstColor = interpolateColors(frame, [passFrame, passFrame + 22], [COLORS.violetLight, COLORS.text]);
+  const [a = "", b] = hook;
+  const timing = [4, 3].map((s) => plan(a, b, s)).find((t) => t.end <= LAST_WORD_BY) ?? plan(a, b, 3);
+  const hA = estimateTitleHeight(a, { bigSize: BIG, smallSize: SMALL });
+  const hB = b ? estimateTitleHeight(b, { bigSize: BIG, smallSize: SMALL }) : 0;
+  const total = hA + (b ? BLOCK_GAP + hB : 0);
+  const top = CONTENT.y + (CONTENT.h - total) / 2 - 20;
+  // Tant que le 2e bloc n'est pas là, le 1er reste centré ; il remonte quand le 2e arrive.
+  const shift = b ? (1 - smooth(frame, timing.startB - 4)) * ((BLOCK_GAP + hB) / 2) : 0;
 
-  const [first, second] = hook;
-  const column: React.CSSProperties = {
-    position: "absolute",
-    left: CONTENT.x,
-    top: CONTENT.y,
-    width: CONTENT.w,
-    height: CONTENT.h - 90,
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    gap: 10,
-    ...titleStyle(110),
-  };
-
-  // Les deux temps sont rendus dans deux calques superposés et identiques : seul
-  // le premier est découpé par la ligne, le second arrive ensuite avec un ressort.
-  const blocks = (visible: 0 | 1, secondStyle?: React.CSSProperties) => (
-    <div style={column}>
-      <div style={{ visibility: visible === 0 ? "visible" : "hidden", color: firstColor }}>
-        <RichText text={first ?? ""} />
-      </div>
-      {second ? (
-        <div style={{ visibility: visible === 1 ? "visible" : "hidden", ...secondStyle }}>
-          <RichText text={second} />
-        </div>
-      ) : null}
-    </div>
-  );
+  // Sortie : léger zoom avant flouté, enchaîné sur la scène 2.
+  const exit = tween(frame, DURATION - 14, DURATION, EASE_IN);
 
   return (
     <AbsoluteFill>
-      {/* Temps 1 : visible uniquement au-dessus de la ligne qui tombe. */}
-      <AbsoluteFill
-        style={{
-          clipPath: `inset(0px 0px ${Math.max(0, HEIGHT - lineY)}px 0px)`,
-          opacity: 1 - exit,
-          transform: `translate3d(0, ${-exit * 28}px, 0)`,
-        }}
-      >
-        {blocks(0)}
-      </AbsoluteFill>
-
-      {/* Temps 2. */}
-      <AbsoluteFill>{blocks(1, rise(smooth(frame, SECOND_BEAT_START), exit))}</AbsoluteFill>
-
       {/* Rémanence : la lumière de la ligne s'éteint doucement en bas de l'écran. */}
       <div
         style={{
@@ -85,9 +60,43 @@ export const SceneHook: React.FC<{ hook: string[] }> = ({ hook }) => {
           top: HEIGHT - 620,
           height: 900,
           background: `radial-gradient(closest-side, ${rgba(COLORS.violet, 0.34)} 0%, ${rgba(COLORS.violet, 0.1)} 55%, ${rgba(COLORS.violet, 0)} 100%)`,
-          opacity: interpolate(frame, [FALL_FRAMES - 10, FALL_FRAMES + 2, DURATION], [0, 1, 0.35], CLAMP) * (1 - exit),
+          opacity: interpolate(frame, [FALL_FRAMES - 10, FALL_FRAMES + 2, DURATION], [0, 1, 0.4], CLAMP) * (1 - exit),
         }}
       />
+
+      <div
+        style={{
+          position: "absolute",
+          left: CONTENT.x,
+          top,
+          width: CONTENT.w,
+          opacity: 1 - exit,
+          transform: `scale(${1 + 0.14 * exit})`,
+          transformOrigin: `50% ${total / 2}px`,
+          filter: exit > 0.01 ? `blur(${(exit * 14).toFixed(2)}px)` : undefined,
+        }}
+      >
+        <KineticTitle
+          text={a}
+          frame={frame}
+          start={BLOCK_A}
+          stagger={timing.stagger}
+          bigSize={BIG}
+          smallSize={SMALL}
+          style={{ transform: `translate3d(0, ${shift}px, 0)` }}
+        />
+        {b ? (
+          <KineticTitle
+            text={b}
+            frame={frame}
+            start={timing.startB}
+            stagger={timing.stagger}
+            bigSize={BIG}
+            smallSize={SMALL}
+            style={{ marginTop: BLOCK_GAP }}
+          />
+        ) : null}
+      </div>
 
       {/* La ligne et sa traîne. */}
       {lineY < HEIGHT + 80 ? (

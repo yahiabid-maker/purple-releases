@@ -25,15 +25,25 @@ Sortie : MP4 H.264, BT.709, sans piste audio. Les réglages sont dans `remotion.
 Tout est dans **`src/texts.ts`** : accroches, titres, sous-titre du coach, lignes du débrief,
 signature, appel à l'action.
 
-- `*mot*` affiche le mot en violet ;
-- `\n` force un saut de ligne dans un titre ;
-- les variantes d'accroche sont dans `hookVariants`, en bas du même fichier.
+Balisage des titres (une ligne par `\n`) :
+
+| Écriture | Rendu |
+| --- | --- |
+| `# du temps.` | ligne géante (Barlow Semi Condensed très gras, ≥ 110 px, réduite si trop longue) |
+| `Tu perds` | ligne courte (Inter, 64 px) |
+| `*Purple*` | mot en violet |
+| `[jaunes.\|verts.\|violets.]` | mot dans une pastille violette ; les mots défilent et elle se pose sur le dernier |
+
+Exemple : `"Tu perds\n# du temps."` affiche « Tu perds » en petit puis « du temps. » en géant.
+Les mots apparaissent un par un, dans l'ordre de lecture.
+
+Les variantes d'accroche sont dans `hookVariants`, en bas du même fichier.
 
 Ces textes sont les props de la composition. On peut donc aussi rendre une accroche à
 l'essai sans toucher au code :
 
 ```console
-npx remotion render PurpleTikTok out/essai.mp4 --props='{"hook":["Ta phrase.","*Purple* la suite."]}'
+npx remotion render PurpleTikTok out/essai.mp4 --props='{"hook":["Ta phrase","# *en géant*."]}'
 ```
 
 Pour prévisualiser et régler à l'image près : `npm run dev` (Remotion Studio).
@@ -52,7 +62,8 @@ npm run stills
 
 - `out/controle/` : une image au milieu de chaque scène, plus l'état final de chaque scène ;
 - `out/controle-zones/` : les mêmes, avec les zones réservées à l'interface TikTok en rouge
-  (180 px en haut, 420 px en bas, 140 px à droite). Rien d'important ne doit s'y trouver.
+  (180 px en haut, 420 px en bas, 140 px à droite). Rien d'important ne doit s'y trouver ;
+  le contenu s'arrête 4 px avant la zone de droite.
 
 Le calque de zones s'active aussi dans le Studio avec la prop `showSafeZones`.
 
@@ -64,7 +75,13 @@ Le calque de zones s'active aussi dans le Studio avec la prop `showSafeZones`.
 | `src/theme.ts` | Couleurs, zones sûres, découpage des scènes, tempo (120 BPM) |
 | `src/fonts.ts` | Polices (Barlow Semi Condensed, Inter, JetBrains Mono) |
 | `src/scenes/` | Une scène du storyboard par fichier |
-| `src/components/` | Fond (lueurs, grain), carte en verre, titres, calque de zones |
+| `src/components/Kinetic.tsx` | Titres en typographie cinétique (mot à mot, petit/géant, pastille) |
+| `src/components/Background.tsx` | Lueurs qui dérivent et respirent sur le tempo, grain |
+| `src/components/GlassCard.tsx` | Carte en verre dépoli |
+| `src/components/Neon.tsx` | Pastille néon (micro), cercles lumineux qui s'agrandissent |
+| `src/components/Bloom.tsx` | Transition « éclosion » de la scène 3 vers la scène 4 |
+| `src/components/Hud.tsx` | Équerres discrètes aux coins de la zone utile |
+| `src/components/SafeZones.tsx` | Calque de contrôle des zones TikTok |
 | `src/lib/track.ts` | Tracé du circuit inventé de la scène 2 |
 
 Rythme : un temps = 30 images, une mesure = 2 s. Les changements de scène tombent sur

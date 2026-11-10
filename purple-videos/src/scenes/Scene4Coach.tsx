@@ -1,21 +1,31 @@
 import React from "react";
 import { AbsoluteFill, Easing, interpolateColors, useCurrentFrame } from "remotion";
 import { GlassCard } from "../components/GlassCard";
+import { NeonMic, Ring } from "../components/Neon";
 import { titleStyle } from "../components/Text";
 import { FONT_TEXT } from "../fonts";
-import { rise, sceneExit, smooth, tween } from "../lib/anim";
-import { BEAT, COLORS, CONTENT, SCENES, rgba } from "../theme";
+import { rise, smooth, tween } from "../lib/anim";
+import { BEAT, CENTER_X, COLORS, CONTENT, SCENES, rgba } from "../theme";
 
 const DURATION = SCENES.coach.duration;
 
 /** La phrase du coach est « dite » entre ces deux images ; la note arrive sur le temps de 11,5 s. */
-const SPEECH = { from: 20, to: 128 };
+const SPEECH = { from: 26, to: 132 };
 const NOTE_AT = 3 * BEAT - 6;
 
-const BARS = 34;
-const WAVE_HEIGHT = 250;
+// Mise en page de la carte (px).
+const CARD_TOP = 290;
+const PAD = 48;
+const HEADER_H = 120;
+const ORB_ZONE = 430;
+const ORB_SIZE = 200;
+const BARS = 60;
+const BAR_BASE = 128;
+const BAR_MAX = 72;
 
-/** Découpe la phrase en mots avec un temps de parole proportionnel à leur longueur. */
+/** Centre de la sphère, en coordonnées écran : la transition depuis la scène 3 s'y condense. */
+export const ORB_CENTER = { x: CENTER_X, y: CARD_TOP + PAD + HEADER_H + 24 + ORB_ZONE / 2 };
+
 const schedule = (sentence: string) => {
   const words = sentence.split(/\s+/).filter(Boolean);
   const weights = words.map((w) => 2.2 + w.length);
@@ -29,10 +39,9 @@ const schedule = (sentence: string) => {
   });
 };
 
-/** Niveau de la voix à une image donnée : une bosse par mot, un creux entre deux mots. */
+/** Niveau de la voix : une bosse par mot ; au repos, la sphère respire doucement. */
 const voiceAt = (frame: number, slots: ReturnType<typeof schedule>) => {
-  // Au repos, l'onde respire doucement : le coach écoute.
-  let level = 0.24 + 0.06 * Math.sin(frame / 11);
+  let level = 0.2 + 0.06 * Math.sin(frame / 11);
   for (const slot of slots) {
     const p = (frame - slot.from) / (slot.to - slot.from);
     if (p > -0.2 && p < 1.5) {
@@ -44,90 +53,93 @@ const voiceAt = (frame: number, slots: ReturnType<typeof schedule>) => {
 };
 
 /**
- * Scène 4 (10–14 s) : carte « Coach vocal », forme d'onde animée et sous-titre
- * qui s'affiche mot à mot, comme une voix qui parle.
+ * Scène 4 (10–14 s) : carte « Coach vocal ». Au centre, une sphère lumineuse
+ * entourée d'une onde circulaire qui suit la voix ; le sous-titre s'allume mot à mot.
  */
-export const SceneCoach: React.FC<{ title: string; subtitle: string; note: string }> = ({
-  title,
-  subtitle,
-  note,
-}) => {
+export const SceneCoach: React.FC<{ title: string; subtitle: string; note: string }> = ({ title, subtitle, note }) => {
   const frame = useCurrentFrame();
-  const exit = sceneExit(frame, DURATION);
-  const cardIn = smooth(frame, 2);
+  const exit = tween(frame, DURATION - 14, DURATION, Easing.in(Easing.cubic));
+  const cardIn = smooth(frame, 6);
+  const orbIn = smooth(frame, 12);
   const slots = schedule(subtitle);
-  const speaking = voiceAt(frame, slots) > 0.25;
+  const level = voiceAt(frame, slots);
+
+  const zoneCenter = { x: CONTENT.w / 2 - PAD, y: ORB_ZONE / 2 };
 
   return (
     <AbsoluteFill>
       <GlassCard
-        sheen={tween(frame, 8, 58, Easing.inOut(Easing.quad))}
+        padding={PAD}
+        sheen={tween(frame, 12, 62, Easing.inOut(Easing.quad))}
         style={{
           position: "absolute",
           left: CONTENT.x,
-          top: 420,
+          top: CARD_TOP,
           width: CONTENT.w,
           opacity: Math.min(1, cardIn * 1.2) * (1 - exit),
-          transform: `translate3d(0, ${(1 - cardIn) * 70 - exit * 28}px, 0) scale(${0.97 + cardIn * 0.03})`,
+          transform: `translate3d(0, ${(1 - cardIn) * 60 - exit * 60}px, 0) scale(${0.95 + cardIn * 0.05})`,
+          filter: exit > 0.01 ? `blur(${(exit * 10).toFixed(2)}px)` : undefined,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ ...titleStyle(112), ...rise(smooth(frame, 8), 0, { distance: 26 }) }}>{title}</div>
-          {/* Témoin « en direct » */}
-          <div
-            style={{
-              position: "relative",
-              width: 30,
-              height: 30,
-              marginRight: 6,
-              borderRadius: "50%",
-              background: speaking ? COLORS.violetLight : rgba(COLORS.violetLight, 0.6),
-              boxShadow: `0 0 ${16 + 16 * Math.sin(frame / 7)}px ${COLORS.violet}`,
-            }}
-          />
+        <div style={{ height: HEADER_H, display: "flex", alignItems: "center", gap: 28 }}>
+          <div style={{ transform: `scale(${0.6 + 0.4 * smooth(frame, 10)})`, opacity: smooth(frame, 10) }}>
+            <NeonMic size={104} glow={0.8 + 0.4 * level} />
+          </div>
+          <div style={{ ...titleStyle(120), whiteSpace: "nowrap", ...rise(smooth(frame, 14), 0, { distance: 26 }) }}>{title}</div>
         </div>
 
-        {/* Forme d'onde */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            height: WAVE_HEIGHT,
-            marginTop: 34,
-          }}
-        >
+        {/* Sphère et onde circulaire */}
+        <div style={{ position: "relative", height: ORB_ZONE, marginTop: 24 }}>
+          {slots.map((slot, i) => (
+            <Ring key={i} x={zoneCenter.x} y={zoneCenter.y} progress={tween(frame, slot.from, slot.from + 46)} from={130} to={300} width={2} />
+          ))}
           {Array.from({ length: BARS }, (_, i) => {
-            const center = (i - (BARS - 1) / 2) / ((BARS - 1) / 2);
-            const bell = 0.32 + 0.68 * Math.exp(-center * center * 2.1);
-            // Chaque barre suit la voix avec un léger retard depuis le centre : l'onde se propage.
-            const level = voiceAt(frame - Math.abs(center) * 5, slots);
-            const wobble =
-              0.42 +
-              0.58 *
-                (0.5 + 0.5 * Math.sin(frame * 0.29 + i * 1.31)) *
-                (0.55 + 0.45 * Math.sin(frame * 0.173 + i * 0.77 + 1.3));
-            const height = Math.max(12, WAVE_HEIGHT * level * bell * wobble);
+            const angle = (i / BARS) * 360;
+            // L'onde tourne lentement et chaque barre suit la voix avec un léger décalage.
+            const phase = (i * 7) % BARS;
+            const local = voiceAt(frame - (phase % 6), slots);
+            const wobble = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(frame * 0.31 + i * 1.7)) * (0.6 + 0.4 * Math.sin(frame * 0.17 + i * 0.9));
+            const length = 8 + BAR_MAX * local * wobble * orbIn;
             return (
               <div
                 key={i}
                 style={{
-                  width: 12,
-                  height,
-                  borderRadius: 6,
-                  background: `linear-gradient(180deg, ${COLORS.violetLight} 0%, ${COLORS.violet} 55%, ${COLORS.violetLight} 100%)`,
-                  boxShadow: `0 0 ${10 + level * 22}px ${rgba(COLORS.violet, 0.35 + level * 0.4)}`,
-                  opacity: (0.55 + 0.45 * level) * cardIn,
+                  position: "absolute",
+                  left: zoneCenter.x - 4,
+                  top: zoneCenter.y - BAR_BASE - length,
+                  width: 8,
+                  height: length,
+                  borderRadius: 4,
+                  background: `linear-gradient(0deg, ${COLORS.violet} 0%, ${COLORS.violetLight} 100%)`,
+                  boxShadow: `0 0 12px ${rgba(COLORS.violet, 0.6)}`,
+                  transformOrigin: `4px ${BAR_BASE + length}px`,
+                  transform: `rotate(${angle + frame * 0.25}deg)`,
+                  opacity: orbIn * (0.55 + 0.45 * local),
                 }}
               />
             );
           })}
+          <div
+            style={{
+              position: "absolute",
+              left: zoneCenter.x - ORB_SIZE / 2,
+              top: zoneCenter.y - ORB_SIZE / 2,
+              width: ORB_SIZE,
+              height: ORB_SIZE,
+              borderRadius: "50%",
+              background: `radial-gradient(circle at 36% 30%, ${COLORS.text} 0%, ${COLORS.violetLight} 24%, ${COLORS.violet} 62%, ${rgba(COLORS.violet, 0.9)} 100%)`,
+              boxShadow: `0 0 ${50 + 50 * level}px ${rgba(COLORS.violet, 0.85)}, 0 0 ${140 + 80 * level}px ${rgba(COLORS.violet, 0.45)}`,
+              transform: `scale(${(0.4 + 0.6 * orbIn) * (0.94 + 0.1 * level)})`,
+              opacity: orbIn,
+            }}
+          />
         </div>
 
         {/* Sous-titre : chaque mot s'allume quand il est prononcé. */}
         <div
           style={{
-            marginTop: 34,
+            marginTop: 20,
+            textAlign: "center",
             fontFamily: FONT_TEXT,
             fontWeight: 600,
             fontSize: 66,
@@ -139,11 +151,7 @@ export const SceneCoach: React.FC<{ title: string; subtitle: string; note: strin
           {slots.map((slot, i) => {
             const said = tween(frame, slot.from - 2, slot.from + 9);
             const done = tween(frame, slot.to, slot.to + 14);
-            const color = interpolateColors(
-              said + done,
-              [0, 1, 2],
-              [rgba(COLORS.text, 0.4), COLORS.violetLight, COLORS.text],
-            );
+            const color = interpolateColors(said + done, [0, 1, 2], [rgba(COLORS.text, 0.4), COLORS.violetLight, COLORS.text]);
             return (
               <React.Fragment key={i}>
                 <span style={{ color }}>{slot.word}</span>
@@ -158,30 +166,22 @@ export const SceneCoach: React.FC<{ title: string; subtitle: string; note: strin
       <div
         style={{
           position: "absolute",
-          // Le texte s'aligne sur la colonne de texte de la carte (x = 128).
-          left: CONTENT.x + 16,
-          top: 1170,
-          width: CONTENT.w - 32,
+          left: CONTENT.x,
+          top: 1196,
+          width: CONTENT.w,
           display: "flex",
           alignItems: "center",
-          gap: 24,
+          justifyContent: "center",
+          gap: 22,
           fontFamily: FONT_TEXT,
           fontWeight: 500,
           fontSize: 56,
           lineHeight: "72px",
-          color: rgba(COLORS.text, 0.86),
+          color: rgba(COLORS.text, 0.88),
           ...rise(smooth(frame, NOTE_AT), exit, { distance: 30 }),
         }}
       >
-        <div
-          style={{
-            width: 8,
-            height: 56,
-            borderRadius: 4,
-            background: COLORS.violet,
-            boxShadow: `0 0 20px ${rgba(COLORS.violet, 0.8)}`,
-          }}
-        />
+        <div style={{ width: 14, height: 14, borderRadius: "50%", background: COLORS.violet, boxShadow: `0 0 18px ${COLORS.violet}` }} />
         {note}
       </div>
     </AbsoluteFill>

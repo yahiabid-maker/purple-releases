@@ -22,13 +22,16 @@ export const COLORS = {
 /** Zones réservées à l'interface TikTok (rien d'important dedans). */
 export const SAFE = { top: 180, bottom: 420, right: 140, left: 80 } as const;
 
-/** Rectangle utile : x 80 → 940, y 180 → 1500. */
+/** Rectangle utile : x 80 → 936 (4 px de marge avant la zone de droite), y 180 → 1500. */
 export const CONTENT = {
   x: SAFE.left,
   y: SAFE.top,
-  w: WIDTH - SAFE.left - SAFE.right,
+  w: WIDTH - SAFE.left - SAFE.right - 4,
   h: HEIGHT - SAFE.top - SAFE.bottom,
 } as const;
+
+/** Axe vertical des compositions centrées (milieu de la zone utile, pas de l'écran). */
+export const CENTER_X = CONTENT.x + CONTENT.w / 2;
 
 /** Découpage du storyboard, en images. Toutes les bornes tombent sur un temps. */
 export const SCENES = {

@@ -1,11 +1,13 @@
 import React from "react";
 import { AbsoluteFill, Sequence } from "remotion";
 import { Background, Grain } from "./components/Background";
+import { Bloom } from "./components/Bloom";
+import { Hud } from "./components/Hud";
 import { SafeZones } from "./components/SafeZones";
 import { SceneHook } from "./scenes/Scene1Hook";
 import { SceneTrack } from "./scenes/Scene2Track";
-import { SceneDelta } from "./scenes/Scene3Delta";
-import { SceneCoach } from "./scenes/Scene4Coach";
+import { S3_CENTER, SceneDelta } from "./scenes/Scene3Delta";
+import { ORB_CENTER, SceneCoach } from "./scenes/Scene4Coach";
 import { SceneDebrief } from "./scenes/Scene5Debrief";
 import { SceneOutro } from "./scenes/Scene6Outro";
 import type { PurpleTikTokProps } from "./texts";
@@ -24,12 +26,7 @@ export const PurpleTikTok: React.FC<PurpleTikTokProps> = (props) => {
         <SceneTrack title={props.trackTitle} />
       </Sequence>
       <Sequence name="3 · Delta et secteurs" from={SCENES.delta.from} durationInFrames={SCENES.delta.duration}>
-        <SceneDelta
-          title={props.deltaTitle}
-          label={props.deltaLabel}
-          value={props.deltaValue}
-          sectors={props.sectors}
-        />
+        <SceneDelta title={props.deltaTitle} label={props.deltaLabel} value={props.deltaValue} sectors={props.sectors} echo={props.deltaEcho} />
       </Sequence>
       <Sequence name="4 · Coach vocal" from={SCENES.coach.from} durationInFrames={SCENES.coach.duration}>
         <SceneCoach title={props.coachTitle} subtitle={props.coachSubtitle} note={props.coachNote} />
@@ -41,6 +38,12 @@ export const PurpleTikTok: React.FC<PurpleTikTokProps> = (props) => {
         <SceneOutro tagline={props.tagline} cta={props.cta} logoFallback={props.logoFallback} />
       </Sequence>
 
+      {/* Transition 3 → 4 : la puce S3 éclot et se condense dans la sphère du coach. */}
+      <Sequence name="Transition éclosion" from={SCENES.coach.from - 16} durationInFrames={56}>
+        <Bloom from={S3_CENTER} to={ORB_CENTER} />
+      </Sequence>
+
+      <Hud />
       <Grain />
       {props.showSafeZones ? <SafeZones /> : null}
     </AbsoluteFill>

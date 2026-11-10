@@ -5,18 +5,21 @@
  *  Ce sont les props par défaut de la composition : on peut aussi
  *  les surcharger sans toucher au code, avec --props='{"hook":["…","…"]}'.
  *
- *  Mise en forme :
- *    *mot*  → le mot passe en violet (accent)
- *    \n     → saut de ligne forcé dans un titre
+ *  Balisage des titres (une ligne par \n) :
+ *    « # texte »   ligne géante (Barlow Semi Condensed très gras)
+ *    « texte »     ligne courte (Inter)
+ *    « *mot* »     mot en violet
+ *    « [a|b|c] »   mot dans une pastille violette ; les mots défilent
+ *                  et la pastille se pose sur le dernier ([mot] pour un seul)
  *
- *  Rappel lisibilité : titres ≥ 110 px, textes ≥ 56 px. Un texte plus long
- *  passe à la ligne tout seul, il ne rétrécit pas.
+ *  Rappel lisibilité : lignes géantes ≥ 110 px (réduites automatiquement
+ *  si elles sont trop longues, jamais en dessous), lignes courtes ≥ 56 px.
  */
 
 export type DebriefRow = { label: string; delta: string };
 
 export type PurpleTikTokProps = {
-  /** Scène 1 — accroche en deux temps (le 2e arrive sur le temps suivant). */
+  /** Scène 1 — accroche en deux temps (le 2e arrive sur le temps de 1 s). */
   hook: string[];
   /** Scène 2 — tracé du circuit. */
   trackTitle: string;
@@ -26,6 +29,8 @@ export type PurpleTikTokProps = {
   /** Valeur finale du delta, en secondes (affichée « −0,412 »). */
   deltaValue: number;
   sectors: string[];
+  /** Mot géant en contour qui défile derrière la carte (décor). */
+  deltaEcho: string;
   /** Scène 4 — coach vocal. */
   coachTitle: string;
   coachSubtitle: string;
@@ -44,21 +49,22 @@ export type PurpleTikTokProps = {
 };
 
 export const defaultTexts: PurpleTikTokProps = {
-  hook: ["Tu perds du temps.", "*Purple* sait où."],
+  hook: ["Tu perds\n# du temps.", "# *Purple*\nsait où."],
 
-  trackTitle: "Chaque virage\n*analysé*.",
+  trackTitle: "Chaque virage\n# *analysé.*",
 
-  deltaTitle: "Fais tomber\ndes secteurs\n*violets*.",
+  deltaTitle: "Fais tomber des secteurs\n# [jaunes.|verts.|violets.]",
   deltaLabel: "Delta",
   deltaValue: -0.412,
   sectors: ["S1", "S2", "S3"],
+  deltaEcho: "VIOLET",
 
   coachTitle: "Coach vocal",
   coachSubtitle: "Freine 10 mètres plus tard au virage 3.",
   coachNote: "Pendant que tu roules.",
 
   debriefLabel: "Débrief",
-  debriefTitle: "Top 3 des virages\noù gagner\ndu temps",
+  debriefTitle: "# Top 3\ndes virages où gagner du temps",
   debriefRows: [
     { label: "Virage 3", delta: "−0,18 s" },
     { label: "Virage 7", delta: "−0,11 s" },
@@ -74,6 +80,6 @@ export const defaultTexts: PurpleTikTokProps = {
 
 /** Variantes d'accroche (scène 1). Chacune a sa composition dans Root.tsx. */
 export const hookVariants = {
-  "PurpleTikTok-Accroche2": ["Ton meilleur tour", "n’est pas encore *écrit*."],
-  "PurpleTikTok-Accroche3": ["Un *coach IA* qui te parle", "pendant que tu roules."],
+  "PurpleTikTok-Accroche2": ["Ton meilleur\n# tour", "n’est pas encore\n# *écrit*."],
+  "PurpleTikTok-Accroche3": ["Un\n# *coach IA*\nqui te parle", "pendant que\n# tu roules."],
 } as const;
