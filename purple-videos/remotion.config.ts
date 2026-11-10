@@ -18,6 +18,10 @@ Config.setColorSpace("bt709");
 Config.setVideoImageFormat("png");
 Config.setStillImageFormat("png");
 
+// Certaines images (3D + flous) sont lourdes en rendu logiciel : on laisse jusqu'à 2 min
+// par image avant d'abandonner, au lieu de 30 s par défaut.
+Config.setDelayRenderTimeoutInMilliseconds(120000);
+
 // Facultatif : utiliser un Chrome déjà installé (CI, machine sans accès au
 // téléchargement automatique du navigateur de rendu).
 const browser = process.env.REMOTION_BROWSER_EXECUTABLE;
