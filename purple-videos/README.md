@@ -94,6 +94,9 @@ Le calque de zones s'active aussi dans le Studio avec la prop `showSafeZones`.
 | `src/components/GlassCard.tsx` | Carte en verre dépoli |
 | `src/components/Neon.tsx` | Pastille néon (micro), cercles lumineux qui s'agrandissent |
 | `src/components/Bloom.tsx` | Transition « éclosion » de la scène 3 vers la scène 4 |
+| `src/components/PanTransition.tsx`, `src/lib/pan.ts` | Transition 1 → 2 vue de dessus : travelling sur l'asphalte fléché, passage de la monoplace |
+| `src/components/CarTopDown.tsx` | Monoplace générique vue de dessus, livrée violette (aucune marque) |
+| `src/components/LiquidWipe.tsx` | Transition liquide de la scène 5 vers la scène 6 |
 | `src/components/Hud.tsx` | Équerres discrètes aux coins de la zone utile |
 | `src/components/SafeZones.tsx` | Calque de contrôle des zones TikTok |
 | `src/lib/spa.ts` | Tracé réel de Spa-Francorchamps, virages mis en avant, limites de secteurs |

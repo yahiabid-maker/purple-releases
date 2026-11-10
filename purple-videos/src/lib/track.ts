@@ -87,6 +87,8 @@ const build = () => {
   };
 
   return {
+    /** Unités du plan par mètre réel. */
+    metre: scale,
     pointAt,
     slice,
     centroid,

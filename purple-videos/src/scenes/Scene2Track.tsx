@@ -1,9 +1,11 @@
 import React from "react";
 import { AbsoluteFill, Easing, Img, interpolate, interpolateColors, staticFile, useCurrentFrame } from "remotion";
+import { CAR_RATIO, CarTopDown } from "../components/CarTopDown";
 import { KineticTitle } from "../components/Kinetic";
 import { FONT_TITLE } from "../fonts";
 import { CLAMP, EASE_IN, EASE_IN_OUT, pop, smooth, tween } from "../lib/anim";
 import { type Camera, type Pt, TRACK, TRACK_BOX, photoMatrix, project } from "../lib/track";
+import { panBlur, scene2Offset } from "../lib/pan";
 import { useStaticFile } from "../lib/useStaticFile";
 import { COLORS, CONTENT, HEIGHT, SCENES, WIDTH, rgba } from "../theme";
 
@@ -18,11 +20,15 @@ const DURATION = SCENES.track.duration;
  *  170     le tour est bouclé ; chaque secteur est passé au violet en se bouclant
  *  180+    les trois virages passent au vert, sur les croches
  */
-const PHOTO = { in: 10, outFrom: 64, outTo: 112 };
-const DRAW = { from: 16, to: 170 };
-const DEZOOM = { from: 40, to: 140 };
-const TILT = { from: 92, to: 160 };
-const GREEN_FROM = 180;
+const PHOTO = { outFrom: 66, outTo: 110 };
+const DRAW = { from: 30, to: 174 };
+const DEZOOM = { from: 48, to: 132 };
+const TILT = { from: 92, to: 156 };
+const GREEN_FROM = 184;
+/** La scène arrive par le bas (travelling depuis l'accroche) et se pose à l'image 26. */
+const LANDED = 26;
+/** Longueur de la monoplace sur la photo (mètres, légèrement agrandie pour la lisibilité). */
+const CAR_METRES = 8.4;
 const GREEN_GAP = 15;
 
 const STAGE_TOP = 470;
@@ -111,14 +117,20 @@ export const SceneTrack: React.FC<{ title: string; photo: string }> = ({ title, 
   const cam = cameraAt(frame);
   const P = (p: Pt) => project(p, cam);
 
-  const photoOpacity = hasPhoto ? tween(frame, 0, PHOTO.in, EASE_IN_OUT) * (1 - tween(frame, PHOTO.outFrom, PHOTO.outTo, EASE_IN_OUT)) : 0;
+  const photoOpacity = hasPhoto ? 1 - tween(frame, PHOTO.outFrom, PHOTO.outTo, EASE_IN_OUT) : 0;
   const mapOpacity = 1 - photoOpacity;
   const gridOpacity = tween(frame, TILT.from - 10, TILT.to - 20, EASE_IN_OUT);
 
   const progress = progressAt(frame);
   const drawn = toPath(TRACK.slice(DRAW_FROM, progress).map(P));
   const head = P(TRACK.pointAt(DRAW_FROM + progress));
-  const headOpacity = Math.min(1, progress * 200) * (1 - tween(frame, DRAW.to - 4, DRAW.to + 14));
+  // Monoplace en tête du tracé, à l'échelle de la photo ; elle laisse place au point lumineux
+  // quand le dézoom la rend trop petite.
+  const back = P(TRACK.pointAt(DRAW_FROM + Math.max(0, progress - 0.0006)));
+  const carLength = CAR_METRES * TRACK.metre * cam.zoom;
+  const carOpacity = progress > 0.0002 ? Math.max(0, Math.min(1, (carLength - 22) / 24)) : 0;
+  const carAngle = (Math.atan2(head.y - back.y, head.x - back.x) * 180) / Math.PI + 90;
+  const headOpacity = Math.min(1, progress * 200) * (1 - tween(frame, DRAW.to - 4, DRAW.to + 14)) * (1 - carOpacity);
 
   const sectors = TRACK.sectors.map(([a, b], i) => {
     const containsStart = DRAW_FROM > a && DRAW_FROM < b;
@@ -151,6 +163,12 @@ export const SceneTrack: React.FC<{ title: string; photo: string }> = ({ title, 
   const gridCenter = P({ x: TRACK_BOX.w / 2, y: TRACK_BOX.h / 2 });
 
   return (
+    <AbsoluteFill
+      style={{
+        transform: `translate3d(0, ${scene2Offset(frame + SCENES.track.from)}px, 0)`,
+        filter: panBlur(frame + SCENES.track.from) > 0.5 ? "url(#panBlur)" : undefined,
+      }}
+    >
     <AbsoluteFill
       style={{
         opacity: 1 - exit,
@@ -280,6 +298,23 @@ export const SceneTrack: React.FC<{ title: string; photo: string }> = ({ title, 
         ) : null}
       </svg>
 
+      {carOpacity > 0.01 ? (
+        <div
+          style={{
+            position: "absolute",
+            left: head.x - carLength / CAR_RATIO / 2,
+            top: head.y - carLength * 0.32,
+            width: carLength / CAR_RATIO,
+            height: carLength,
+            transformOrigin: `50% 32%`,
+            transform: `rotate(${carAngle}deg)`,
+            opacity: carOpacity,
+          }}
+        >
+          <CarTopDown width={carLength / CAR_RATIO} id="trackCar" />
+        </div>
+      ) : null}
+
       {/* Haut assombri pour le titre, tant que la photo ou le dézoom passent dessous. */}
       <div
         style={{
@@ -323,7 +358,8 @@ export const SceneTrack: React.FC<{ title: string; photo: string }> = ({ title, 
         );
       })}
 
-      <KineticTitle text={title} frame={frame} start={4} stagger={6} bigSize={176} style={{ position: "absolute", left: CONTENT.x, top: CONTENT.y + 36 }} />
+      <KineticTitle text={title} frame={frame} start={LANDED} stagger={6} bigSize={176} style={{ position: "absolute", left: CONTENT.x, top: CONTENT.y + 36 }} />
+    </AbsoluteFill>
     </AbsoluteFill>
   );
 };
