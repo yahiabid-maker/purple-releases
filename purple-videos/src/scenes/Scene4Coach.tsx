@@ -4,7 +4,7 @@ import { GlassCard } from "../components/GlassCard";
 import { KineticTitle } from "../components/Kinetic";
 import { wipeClipAt } from "../components/LightLine";
 import { NeonMic, Ring } from "../components/Neon";
-import { displayStyle, upper } from "../components/Text";
+import { displayStyle } from "../components/Text";
 import { FONT_TEXT } from "../fonts";
 import { rise, smooth, tween } from "../lib/anim";
 import { BEAT, CENTER_X, COLORS, CONTENT, SCENES, rgba } from "../theme";
@@ -88,7 +88,7 @@ export const SceneCoach: React.FC<{ title: string; subtitle: string; note: strin
           <div style={{ transform: `scale(${0.6 + 0.4 * smooth(frame, 10)})`, opacity: smooth(frame, 10) }}>
             <NeonMic size={104} glow={0.8 + 0.4 * level} />
           </div>
-          <div style={{ ...displayStyle(116), lineHeight: 1, whiteSpace: "nowrap", ...rise(smooth(frame, 14), 0, { distance: 26 }) }}>{upper(title)}</div>
+          <div style={{ ...displayStyle(116), lineHeight: 1, whiteSpace: "nowrap", ...rise(smooth(frame, 14), 0, { distance: 26 }) }}>{title}</div>
         </div>
 
         {/* Sphère et onde circulaire */}

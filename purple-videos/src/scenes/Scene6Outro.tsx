@@ -3,7 +3,7 @@ import { AbsoluteFill, Img, staticFile, useCurrentFrame } from "remotion";
 import { Flag } from "../components/Flag";
 import { KineticTitle } from "../components/Kinetic";
 import { Ring } from "../components/Neon";
-import { displayStyle, upper } from "../components/Text";
+import { displayStyle } from "../components/Text";
 import { FONT_TEXT } from "../fonts";
 import { EASE_IN_OUT, EASE_OUT, rise, smooth, tween } from "../lib/anim";
 import { useStaticFile } from "../lib/useStaticFile";
@@ -125,7 +125,7 @@ export const SceneOutro: React.FC<{ tagline: string; cta: string; logoFallback: 
         {logo === "ready" ? (
           <Img src={staticFile(LOGO_FILE)} style={{ width: 560, height: 300, objectFit: "contain", filter: `drop-shadow(0 0 60px ${rgba(COLORS.violet, 0.6)})` }} />
         ) : logo === "missing" ? (
-          <div style={{ ...displayStyle(224), lineHeight: 1, textShadow: `0 0 70px ${rgba(COLORS.violet, 0.75)}` }}>{upper(logoFallback)}</div>
+          <div style={{ ...displayStyle(224), lineHeight: 1, textShadow: `0 0 70px ${rgba(COLORS.violet, 0.75)}` }}>{logoFallback}</div>
         ) : null}
       </div>
 

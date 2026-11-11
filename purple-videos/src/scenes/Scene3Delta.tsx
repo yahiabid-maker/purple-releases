@@ -3,7 +3,7 @@ import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from "remotion";
 import { GlassCard } from "../components/GlassCard";
 import { KineticTitle } from "../components/Kinetic";
 import { Ring } from "../components/Neon";
-import { displayStyle, monoStyle, upper } from "../components/Text";
+import { displayStyle, monoStyle } from "../components/Text";
 import { FONT_TEXT } from "../fonts";
 import { CLAMP, EASE_IN_OUT, pop, sceneExit, smooth, tween } from "../lib/anim";
 import { BEAT, COLORS, CONTENT, SCENES, rgba } from "../theme";
@@ -221,7 +221,7 @@ export const SceneDelta: React.FC<{
                     transform: "skewX(-9deg)",
                   }}
                 />
-                <div style={{ position: "relative", ...displayStyle(), fontSize: 56, lineHeight: 1, letterSpacing: "0.012em", whiteSpace: "nowrap" }}>{upper(badge)}</div>
+                <div style={{ position: "relative", ...displayStyle(), fontSize: 56, lineHeight: 1, letterSpacing: "-0.005em", whiteSpace: "nowrap" }}>{badge}</div>
               </div>
             ) : null}
           </div>

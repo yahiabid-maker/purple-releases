@@ -1,29 +1,28 @@
 import type { CSSProperties } from "react";
-import { FONT_MONO, FONT_TITLE } from "../fonts";
+import { FONT_MONO, FONT_TEXT, FONT_TITLE, TITLE_VARIATION } from "../fonts";
 import type { Face } from "../lib/measure";
 import { COLORS, TYPE } from "../theme";
 
 /**
  * Système typographique de la vidéo.
- *  - Mots géants : Barlow Semi Condensed 800 italique, capitales serrées.
- *  - Lignes d'appui : la même famille en 600 italique, bas de casse.
- *  - Interface des cartes : Inter. Chronos et deltas : JetBrains Mono 800.
+ *  - Mots géants : serif rétro très gras (Bropella une fois le fichier déposé,
+ *    Fraunces en attendant), en bas de casse, écrits tels qu'ils sont saisis.
+ *  - Lignes d'appui et interface des cartes : Inter.
+ *  - Chronos et deltas : JetBrains Mono.
  */
-export const DISPLAY_FACE: Face = { family: FONT_TITLE, weight: 800, italic: true };
-export const LEAD_FACE: Face = { family: FONT_TITLE, weight: 600, italic: true };
+export const DISPLAY_TRACKING = -0.018;
+export const DISPLAY_LEADING = 1;
+export const LEAD_LEADING = 1.2;
+const LEAD_TRACKING = -0.015;
 
-/** Interlettrage et interlignage des mots géants (en em). */
-export const DISPLAY_TRACKING = -0.012;
-export const DISPLAY_LEADING = 0.88;
-export const LEAD_LEADING = 1.16;
+export const DISPLAY_FACE: Face = { family: FONT_TITLE, weight: 900, variation: TITLE_VARIATION, tracking: DISPLAY_TRACKING };
+export const LEAD_FACE: Face = { family: FONT_TEXT, weight: 600, tracking: LEAD_TRACKING };
 
-export const upper = (text: string) => text.toLocaleUpperCase("fr-FR");
-
-/** Mot géant : jamais sous 110 px. Le texte doit être passé par upper(). */
+/** Mot géant : jamais sous 110 px. */
 export const displayStyle = (size: number = TYPE.titleMin): CSSProperties => ({
   fontFamily: FONT_TITLE,
-  fontStyle: "italic",
-  fontWeight: 800,
+  fontWeight: 900,
+  fontVariationSettings: TITLE_VARIATION,
   fontSize: Math.max(size, TYPE.titleMin),
   lineHeight: DISPLAY_LEADING,
   letterSpacing: `${DISPLAY_TRACKING}em`,
@@ -31,13 +30,12 @@ export const displayStyle = (size: number = TYPE.titleMin): CSSProperties => ({
 });
 
 /** Ligne d'appui d'un titre : jamais sous 56 px. */
-export const leadStyle = (size: number = 68): CSSProperties => ({
-  fontFamily: FONT_TITLE,
-  fontStyle: "italic",
+export const leadStyle = (size: number = 64): CSSProperties => ({
+  fontFamily: FONT_TEXT,
   fontWeight: 600,
   fontSize: Math.max(size, TYPE.textMin),
   lineHeight: LEAD_LEADING,
-  letterSpacing: "0.004em",
+  letterSpacing: `${LEAD_TRACKING}em`,
   color: COLORS.text,
 });
 

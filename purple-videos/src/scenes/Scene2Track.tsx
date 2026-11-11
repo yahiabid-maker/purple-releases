@@ -2,7 +2,7 @@ import React from "react";
 import { AbsoluteFill, Easing, Img, interpolate, interpolateColors, staticFile, useCurrentFrame } from "remotion";
 import { KineticTitle } from "../components/Kinetic";
 import { wipeClip } from "../components/LightLine";
-import { FONT_TITLE } from "../fonts";
+import { FONT_TITLE, TITLE_VARIATION } from "../fonts";
 import { CLAMP, EASE_IN_OUT, pop, smooth, tween } from "../lib/anim";
 import { type Camera, type Pt, TRACK, TRACK_BOX, photoMatrix, project } from "../lib/track";
 import { useStaticFile } from "../lib/useStaticFile";
@@ -311,8 +311,8 @@ export const SceneTrack: React.FC<{ title: string; photo: string }> = ({ title, 
               background: `linear-gradient(180deg, ${rgba(COLORS.violetLight, 0.45)} 0%, ${rgba(COLORS.violet, 0)} 60%), ${COLORS.violet}`,
               boxShadow: `inset 0 0 0 1.5px ${rgba(COLORS.text, 0.35)}, 0 0 30px ${rgba(COLORS.violet, 0.8)}`,
               fontFamily: FONT_TITLE,
-              fontStyle: "italic",
-              fontWeight: 800,
+              fontWeight: 900,
+              fontVariationSettings: TITLE_VARIATION,
               fontSize: 58,
               lineHeight: 1.1,
               color: COLORS.text,

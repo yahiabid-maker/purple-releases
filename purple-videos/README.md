@@ -29,12 +29,12 @@ Balisage des titres (une ligne par `\n`) :
 
 | Écriture | Rendu |
 | --- | --- |
-| `# du temps.` | ligne géante : Barlow Semi Condensed 800 italique, en capitales, calée sur la largeur (≥ 110 px) |
-| `Tu perds` | ligne d'appui : Barlow Semi Condensed 600 italique, bas de casse (≥ 56 px) |
+| `# du temps.` | ligne géante : serif rétro très gras, écrite telle quelle, calée sur la largeur (≥ 110 px) |
+| `Tu perds` | ligne d'appui : Inter 600 (≥ 56 px) |
 | `*Purple*` | mot en violet |
 | `[jaunes.\|verts.\|violets.]` | mot dans une pastille violette ; les mots défilent et elle se pose sur le dernier |
 
-Exemple : `"Tu perds\n# du temps."` affiche « Tu perds » en petit puis « DU TEMPS. » en géant.
+Exemple : `"Tu perds\n# du temps."` affiche « Tu perds » en petit puis « du temps. » en géant.
 Les mots sortent d'un masque un par un, dans l'ordre de lecture. Les lignes géantes sont
 mesurées avec la vraie police : chacune prend le plus grand corps qui tient sur la largeur.
 
@@ -42,12 +42,26 @@ mesurées avec la vraie police : chacune prend le plus grand corps qui tient sur
 
 | Usage | Police |
 | --- | --- |
-| Mots géants, titres de cartes, puces S1/S2/S3 | Barlow Semi Condensed 800 italique, capitales |
-| Lignes d'appui des titres | Barlow Semi Condensed 600 italique |
-| Interface des cartes (libellés, sous-titre du coach, lignes du débrief) | Inter 500/600 |
+| Mots géants, titres de cartes, puces S1/S2/S3 | **Bropella** (Martype co), payante — en attendant : Fraunces 900 |
+| Lignes d'appui des titres, interface des cartes | Inter 500/600 |
 | Chronos et deltas | JetBrains Mono 800 |
 
-Les styles sont dans `src/components/Text.tsx` ; ne mélange pas d'autre police dans un titre.
+### Installer la police des titres
+
+La police des titres a été choisie dans la planche « Playful & Creative Fonts » : c'est
+**Bropella**, de Martype co. Elle est payante (licence commerciale à acheter, par exemple sur
+MyFonts) ; le dépôt ne la contient pas.
+
+1. Achète la licence et télécharge le fichier (OTF, TTF, WOFF ou WOFF2).
+2. Copie-le dans **`public/fonts/`** sous le nom `titre.otf` (ou `titre.ttf`, `titre.woff`,
+   `titre.woff2`).
+3. Relance le rendu. La police est détectée toute seule ; les titres se recalent sur sa largeur.
+
+Tant que le fichier est absent, les titres utilisent **Fraunces** (Google Fonts, licence OFL,
+usage commercial libre), réglée sur ses formes les plus proches (empattements doux, grand
+corps). Pour essayer une autre police de la planche, dépose simplement son fichier à la place.
+
+Les styles sont dans `src/components/Text.tsx`, le chargement dans `src/fonts.ts`.
 
 Les variantes d'accroche sont dans `hookVariants`, en bas du même fichier.
 
@@ -136,7 +150,7 @@ node scripts/frames.mjs 464-490:2        # la transition de 8 s, une image sur d
 | --- | --- |
 | `src/texts.ts` | Tous les textes (props par défaut) et les variantes d'accroche |
 | `src/theme.ts` | Couleurs, zones sûres, découpage des scènes, tempo (120 BPM) |
-| `src/fonts.ts` | Polices (Barlow Semi Condensed, Inter, JetBrains Mono) |
+| `src/fonts.ts` | Polices : titre (fichier de `public/fonts/` ou Fraunces), Inter, JetBrains Mono |
 | `src/components/Text.tsx` | Styles typographiques (mots géants, lignes d'appui, chiffres) |
 | `src/lib/measure.ts` | Mesure réelle des textes, pour caler les mots géants au pixel |
 | `src/scenes/` | Une scène du storyboard par fichier |

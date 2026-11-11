@@ -3,15 +3,15 @@ import type { CSSProperties } from "react";
 import { EASE_OUT, smooth, tween } from "../lib/anim";
 import { widthEm } from "../lib/measure";
 import { COLORS, CONTENT, TYPE, rgba } from "../theme";
-import { DISPLAY_FACE, DISPLAY_LEADING, DISPLAY_TRACKING, LEAD_FACE, LEAD_LEADING, displayStyle, leadStyle, upper } from "./Text";
+import { DISPLAY_FACE, DISPLAY_LEADING, LEAD_FACE, LEAD_LEADING, displayStyle, leadStyle } from "./Text";
 
 /**
- * Titres en typographie cinétique : une ligne d'appui (Barlow 600 italique, bas de
- * casse) porte un mot géant (Barlow 800 italique, capitales). Chaque mot sort d'un
- * masque, de bas en haut ; les mots géants sont calibrés sur la largeur disponible.
+ * Titres en typographie cinétique : une ligne d'appui (Inter) porte un mot géant
+ * (serif rétro très gras). Chaque mot sort d'un masque, de bas en haut ; les mots
+ * géants sont calibrés sur la largeur disponible.
  *
  * Balisage, ligne par ligne (séparées par \n) :
- *   « # texte »        ligne géante, en capitales
+ *   « # texte »        ligne géante
  *   « texte »          ligne d'appui
  *   « *mot* »          mot en violet
  *   « [a|b|c] »        mot dans une pastille violette ; les mots défilent et
@@ -52,18 +52,18 @@ export const parseTitle = (text: string): Line[] =>
   });
 
 /** Marge intérieure de la pastille, de chaque côté (en em). */
-const PILL_PAD = 0.17;
+const PILL_PAD = 0.2;
 /** Les lignes géantes s'arrêtent un cheveu avant le bord (débord de l'italique). */
 const FIT = 0.985;
 
 const plain = (word: Word) => word.segments.map((s) => s.text).join("");
-const displayWordEm = (text: string) => widthEm(upper(text), DISPLAY_FACE) + DISPLAY_TRACKING * text.length;
+const displayWordEm = (text: string) => widthEm(text, DISPLAY_FACE);
 
 /** Largeur naturelle d'une ligne, en em de son corps. */
 const lineWidthEm = (line: Line) => {
   if (!line.display) {
     const text = line.words.map((w) => (w.pill ? w.pill[w.pill.length - 1] : "") + plain(w)).join(" ");
-    return widthEm(text, LEAD_FACE) + 0.004 * text.length;
+    return widthEm(text, LEAD_FACE);
   }
   const space = widthEm(" ", DISPLAY_FACE);
   return line.words.reduce((total, word, i) => {
@@ -81,9 +81,9 @@ const lineSize = (line: Line, bigSize: number, smallSize: number, width: number)
 
 /** Espace entre deux lignes : réglé à l'œil sur la hauteur des capitales, pas sur les boîtes. */
 const gapBetween = (previous: Line, current: Line) => {
-  // Une pastille monte plus haut que les capitales : elle prend un peu d'air.
-  if (current.words.some((w) => w.pill)) return 10;
-  return current.display ? (previous.display ? 8 : -4) : previous.display ? 12 : 0;
+  // Une pastille déborde de la ligne : elle prend un peu d'air.
+  if (current.words.some((w) => w.pill)) return 14;
+  return current.display ? (previous.display ? -6 : -2) : previous.display ? 6 : 0;
 };
 
 type Sizes = { bigSize?: number; smallSize?: number; width?: number };
@@ -123,7 +123,7 @@ const Reveal: React.FC<{ progress: number; big: boolean; children: React.ReactNo
     style={{
       display: "inline-block",
       // Le masque déborde sur les côtés et en haut (italique, accents) ; il disparaît une fois le mot posé.
-      clipPath: progress < 0.999 ? `inset(-0.4em -0.35em ${big ? "-0.03em" : "-0.1em"} -0.35em)` : undefined,
+      clipPath: progress < 0.999 ? "inset(-0.4em -0.35em -0.26em -0.35em)" : undefined,
     }}
   >
     <span
@@ -131,7 +131,7 @@ const Reveal: React.FC<{ progress: number; big: boolean; children: React.ReactNo
         display: "inline-block",
         transform:
           progress < 0.999
-            ? `translate3d(0, ${((1 - progress) * 122).toFixed(2)}%, 0) rotate(${((1 - progress) * (big ? 3.5 : 0)).toFixed(2)}deg)`
+            ? `translate3d(0, ${((1 - progress) * 140).toFixed(2)}%, 0) rotate(${((1 - progress) * (big ? 4 : 0)).toFixed(2)}deg)`
             : undefined,
         transformOrigin: "0% 100%",
         opacity: progress > 0.001 ? 1 : 0,
@@ -142,7 +142,7 @@ const Reveal: React.FC<{ progress: number; big: boolean; children: React.ReactNo
   </span>
 );
 
-/** Pastille : un parallélogramme violet se déroule, puis les mots défilent comme un compteur. */
+/** Pastille : un bloc violet se déroule, puis les mots défilent comme un compteur. */
 const PILL_CYCLE = 10;
 
 const Pill: React.FC<{ words: string[]; frame: number; at: number }> = ({ words, frame, at }) => {
@@ -156,17 +156,17 @@ const Pill: React.FC<{ words: string[]; frame: number; at: number }> = ({ words,
         style={{
           position: "absolute",
           left: 0,
-          top: "0.02em",
-          bottom: "-0.07em",
+          top: "0.06em",
+          bottom: "-0.1em",
           width: `${width.toFixed(4)}em`,
-          borderRadius: "0.09em",
+          borderRadius: "0.16em",
           background: `linear-gradient(180deg, ${rgba(COLORS.violetLight, 0.55)} 0%, ${rgba(COLORS.violet, 0)} 60%), ${COLORS.violet}`,
           boxShadow: `0 0 0.4em ${rgba(COLORS.violet, 0.6 * wipe)}`,
-          transform: `skewX(-9deg) scaleX(${wipe})`,
+          transform: `scaleX(${wipe})`,
           transformOrigin: "0% 50%",
         }}
       />
-      <span style={{ position: "relative", display: "inline-grid", clipPath: "inset(-0.02em -0.3em -0.05em)", verticalAlign: "top" }}>
+      <span style={{ position: "relative", display: "inline-grid", clipPath: "inset(0.04em -0.3em -0.1em)", verticalAlign: "top" }}>
         {words.map((word, i) => {
           const enter = at + 6 + i * PILL_CYCLE;
           const pIn = tween(frame, enter, enter + 8, EASE_OUT);
@@ -181,7 +181,7 @@ const Pill: React.FC<{ words: string[]; frame: number; at: number }> = ({ words,
                 opacity: pIn * (1 - pOut),
               }}
             >
-              {upper(word)}
+              {word}
             </span>
           );
         })}
@@ -199,8 +199,8 @@ const accentStyle = (display: boolean): CSSProperties =>
   display
     ? {
         display: "inline-block",
-        padding: "0.16em 0.12em 0.1em",
-        margin: "-0.16em -0.12em -0.1em",
+        padding: "0.2em 0.14em 0.3em",
+        margin: "-0.2em -0.14em -0.3em",
         backgroundImage: `linear-gradient(180deg, ${COLORS.violetLight} 0%, ${COLORS.violetLight} 24%, ${COLORS.violet} 80%)`,
         WebkitBackgroundClip: "text",
         backgroundClip: "text",
@@ -213,7 +213,7 @@ const Segments: React.FC<{ segments: Segment[]; display: boolean }> = ({ segment
   <>
     {segments.map((s, i) => (
       <span key={i} style={s.accent ? accentStyle(display) : undefined}>
-        {display ? upper(s.text) : s.text}
+        {s.text}
       </span>
     ))}
   </>
