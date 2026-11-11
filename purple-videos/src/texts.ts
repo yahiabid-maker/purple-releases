@@ -6,7 +6,7 @@
  *  les surcharger sans toucher au code, avec --props='{"hook":["…","…"]}'.
  *
  *  Balisage des titres (une ligne par \n) :
- *    « # texte »   ligne géante (Barlow Semi Condensed très gras)
+ *    « # texte »   ligne géante (serif rétro très gras, voir README « Typographie »)
  *    « texte »     ligne courte (Inter)
  *    « *mot* »     mot en violet
  *    « [a|b|c] »   mot dans une pastille violette ; les mots défilent
