@@ -1,4 +1,4 @@
-# Purple — vidéo TikTok (20 s)
+# Purple — vidéo TikTok (22 s)
 
 Vidéo verticale 1080 × 1920, 60 i/s, 22 s, sans audio (la musique s'ajoute dans TikTok).
 Projet [Remotion](https://www.remotion.dev) autonome, séparé du dépôt de l'appli.
@@ -29,13 +29,25 @@ Balisage des titres (une ligne par `\n`) :
 
 | Écriture | Rendu |
 | --- | --- |
-| `# du temps.` | ligne géante (Barlow Semi Condensed très gras, ≥ 110 px, réduite si trop longue) |
-| `Tu perds` | ligne courte (Inter, 64 px) |
+| `# du temps.` | ligne géante : Barlow Semi Condensed 800 italique, en capitales, calée sur la largeur (≥ 110 px) |
+| `Tu perds` | ligne d'appui : Barlow Semi Condensed 600 italique, bas de casse (≥ 56 px) |
 | `*Purple*` | mot en violet |
 | `[jaunes.\|verts.\|violets.]` | mot dans une pastille violette ; les mots défilent et elle se pose sur le dernier |
 
-Exemple : `"Tu perds\n# du temps."` affiche « Tu perds » en petit puis « du temps. » en géant.
-Les mots apparaissent un par un, dans l'ordre de lecture.
+Exemple : `"Tu perds\n# du temps."` affiche « Tu perds » en petit puis « DU TEMPS. » en géant.
+Les mots sortent d'un masque un par un, dans l'ordre de lecture. Les lignes géantes sont
+mesurées avec la vraie police : chacune prend le plus grand corps qui tient sur la largeur.
+
+## Typographie
+
+| Usage | Police |
+| --- | --- |
+| Mots géants, titres de cartes, puces S1/S2/S3 | Barlow Semi Condensed 800 italique, capitales |
+| Lignes d'appui des titres | Barlow Semi Condensed 600 italique |
+| Interface des cartes (libellés, sous-titre du coach, lignes du débrief) | Inter 500/600 |
+| Chronos et deltas | JetBrains Mono 800 |
+
+Les styles sont dans `src/components/Text.tsx` ; ne mélange pas d'autre police dans un titre.
 
 Les variantes d'accroche sont dans `hookVariants`, en bas du même fichier.
 
@@ -71,12 +83,32 @@ dans `src/lib/spa.ts`.
 ## Vidéo de l'arrêt aux stands
 
 La séquence de 2 à 4 s lit **`public/pitstop.mp4`** (extrait à partir de 3,6 s, à 1,2×, sans le son),
-en fondu enchaîné entre l'accroche et la photo aérienne. Sa légende est la prop `pitStopCaption`.
-Pour changer de vidéo, remplace le fichier ou la prop `pitStopVideo` (`""` pour s'en passer ;
-l'extrait se règle dans `src/scenes/SceneB_PitStop.tsx`).
+en fondu enchaîné entre l'accroche et la photo aérienne. Un chrono tourne pendant l'arrêt et se
+fige quand la voiture repart ; la légende est la prop `pitStopCaption`.
+Pour changer de vidéo, remplace le fichier ou la prop `pitStopVideo` (`""` pour s'en passer).
+L'extrait, l'instant du départ (`LAUNCH`) et le temps affiché (`STOP_SECONDS`) se règlent en haut
+de `src/scenes/SceneB_PitStop.tsx`.
 
 **Droits** : cette vidéo vient de Pinterest et montre une monoplace et une équipe identifiables.
 Elle n'est pas versionnée. Avant publication, obtiens les droits ou remplace-la.
+
+## Drapeau à damier
+
+Les scènes 1 et 6 posent en bas de l'image **`public/drapeau.mp4`** : une simulation de tissu
+filmée sur fond noir. Un filtre (`src/components/Flag.tsx`) rend le noir transparent et teinte
+les cases en violet ; n'importe quelle vidéo claire sur fond noir fonctionne donc à sa place.
+Prop `flagVideo` (`""` pour s'en passer). L'extrait dure 3,9 s et ne boucle pas.
+
+Le fichier livré est la vidéo d'origine (720 × 720, 30 i/s) agrandie en 1080 × 1080 et
+interpolée à 60 i/s avec ffmpeg :
+
+```console
+ffmpeg -i source.mp4 -vf "minterpolate=fps=60:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,scale=1080:1080:flags=lanczos,unsharp=5:5:0.5:5:5:0.0" -c:v libx264 -crf 14 -an public/drapeau.mp4
+```
+
+**Droits** : cette boucle vient de Pinterest ; c'est une création d'Alan Finch (Cinema 4D) pour
+une marque de boissons. Elle n'est pas versionnée. Avant publication, obtiens une licence ou
+remplace-la par un drapeau dont tu as les droits.
 
 ## Images de contrôle
 
@@ -91,6 +123,13 @@ npm run stills
 
 Le calque de zones s'active aussi dans le Studio avec la prop `showSafeZones`.
 
+Pour vérifier une animation image par image (un seul lancement, plusieurs images) :
+
+```console
+node scripts/frames.mjs 0,20,30          # → out/images/image-0000.png, …
+node scripts/frames.mjs 464-490:2        # la transition de 8 s, une image sur deux
+```
+
 ## Repères
 
 | Fichier | Rôle |
@@ -98,15 +137,19 @@ Le calque de zones s'active aussi dans le Studio avec la prop `showSafeZones`.
 | `src/texts.ts` | Tous les textes (props par défaut) et les variantes d'accroche |
 | `src/theme.ts` | Couleurs, zones sûres, découpage des scènes, tempo (120 BPM) |
 | `src/fonts.ts` | Polices (Barlow Semi Condensed, Inter, JetBrains Mono) |
+| `src/components/Text.tsx` | Styles typographiques (mots géants, lignes d'appui, chiffres) |
+| `src/lib/measure.ts` | Mesure réelle des textes, pour caler les mots géants au pixel |
 | `src/scenes/` | Une scène du storyboard par fichier |
-| `src/components/Kinetic.tsx` | Titres en typographie cinétique (mot à mot, petit/géant, pastille) |
+| `src/components/Kinetic.tsx` | Titres en typographie cinétique (masques mot à mot, appui/géant, pastille) |
+| `src/components/Flag.tsx` | Drapeau à damier : incrustation et teinte violette de la vidéo |
+| `src/components/LightLine.tsx` | La ligne de lumière : elle tombe dans l'accroche, puis efface les scènes 2 et 4 |
 | `src/components/Background.tsx` | Lueurs qui dérivent et respirent sur le tempo, grain |
 | `src/components/GlassCard.tsx` | Carte en verre dépoli |
 | `src/components/Neon.tsx` | Pastille néon (micro), cercles lumineux qui s'agrandissent |
 | `src/components/Bloom.tsx` | Transition « éclosion » de la scène 3 vers la scène 4 |
-| `src/scenes/SceneB_PitStop.tsx` | Arrêt aux stands (2–4 s) : vidéo en fondu enchaîné, étalonnage, légende |
+| `src/scenes/SceneB_PitStop.tsx` | Arrêt aux stands (2–4 s) : vidéo en fondu enchaîné, étalonnage, chrono, légende |
 | `src/components/LiquidWipe.tsx` | Transition liquide de la scène 5 vers la scène 6 |
-| `src/components/Hud.tsx` | Équerres discrètes aux coins de la zone utile |
+| `src/components/Hud.tsx` | Équerres discrètes en bas de la zone utile |
 | `src/components/SafeZones.tsx` | Calque de contrôle des zones TikTok |
 | `src/lib/spa.ts` | Tracé réel de Spa-Francorchamps, virages mis en avant, limites de secteurs |
 | `src/lib/track.ts` | Mise à l'échelle et lissage du tracé, projection 3D des étiquettes |

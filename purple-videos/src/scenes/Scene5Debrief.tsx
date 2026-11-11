@@ -2,7 +2,8 @@ import React from "react";
 import { AbsoluteFill, Easing, useCurrentFrame } from "remotion";
 import { GlassCard } from "../components/GlassCard";
 import { KineticTitle } from "../components/Kinetic";
-import { FONT_MONO, FONT_TEXT } from "../fonts";
+import { monoStyle } from "../components/Text";
+import { FONT_TEXT } from "../fonts";
 import { rise, sceneExit, smooth, tween } from "../lib/anim";
 import type { DebriefRow } from "../texts";
 import { BEAT, COLORS, CONTENT, SCENES, rgba } from "../theme";
@@ -13,7 +14,7 @@ const DURATION = SCENES.debrief.duration;
 const ROWS_FROM = BEAT - 6;
 const ROWS_GAP = BEAT / 2;
 
-const CARD_TOP = 300;
+const CARD_TOP = 262;
 const PAD = 48;
 const INNER = CONTENT.w - 2 * PAD;
 
@@ -92,7 +93,7 @@ export const SceneDebrief: React.FC<{ label: string; title: string; rows: Debrie
           {label}
         </div>
 
-        <KineticTitle text={title} frame={frame} start={8} stagger={3} bigSize={230} smallSize={60} align="left" width={INNER} style={{ marginTop: 16 }} />
+        <KineticTitle text={title} frame={frame} start={8} stagger={3} bigSize={236} smallSize={62} width={INNER} style={{ marginTop: 22 }} />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 34, perspective: 1200 }}>
           {rows.map((row, i) => {
@@ -143,11 +144,8 @@ export const SceneDebrief: React.FC<{ label: string; title: string; rows: Debrie
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontFamily: FONT_MONO,
-                    fontWeight: 700,
-                    fontSize: 56,
-                    lineHeight: 1,
-                    color: COLORS.text,
+                    ...monoStyle(56),
+                    letterSpacing: 0,
                     background: first ? COLORS.violet : rgba(COLORS.text, 0.1),
                     boxShadow: first ? `0 0 28px ${rgba(COLORS.violet, 0.8)}` : undefined,
                   }}
@@ -157,7 +155,7 @@ export const SceneDebrief: React.FC<{ label: string; title: string; rows: Debrie
                 <div style={{ position: "relative", flex: 1, fontFamily: FONT_TEXT, fontWeight: 600, fontSize: 56, letterSpacing: "-0.015em", color: COLORS.text, whiteSpace: "nowrap" }}>
                   {row.label}
                 </div>
-                <div style={{ position: "relative", fontFamily: FONT_MONO, fontWeight: 700, fontSize: 60, letterSpacing: "-0.03em", color: first ? COLORS.text : COLORS.violetLight, whiteSpace: "nowrap" }}>
+                <div style={{ position: "relative", ...monoStyle(60), color: first ? COLORS.text : COLORS.violetLight, whiteSpace: "nowrap" }}>
                   {number}
                   {unit ? <span style={{ marginLeft: "0.28em" }}>{unit}</span> : null}
                 </div>

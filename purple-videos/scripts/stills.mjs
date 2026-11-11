@@ -1,4 +1,4 @@
-// Images de contrôle : une image fixe au milieu de chaque scène (npx remotion still).
+// Images de contrôle : une image fixe au milieu de chaque scène.
 //
 //   node scripts/stills.mjs                 → out/controle/scene-N-milieu.png
 //   node scripts/stills.mjs --zones         → idem, avec les zones réservées TikTok en surimpression
@@ -6,8 +6,7 @@
 //   node scripts/stills.mjs --dir=out/x     → autre dossier de sortie
 //   node scripts/stills.mjs --comp=PurpleTikTok-Accroche2
 
-import { execFileSync } from "node:child_process";
-import { mkdirSync } from "node:fs";
+import { flag, option, renderStills } from "./lib/render-stills.mjs";
 
 const FPS = 60;
 // [nom, début (s), fin (s)] — même découpage que SCENES dans src/theme.ts
@@ -22,26 +21,17 @@ const SCENES = [
 ];
 const END = 22;
 
-const args = process.argv.slice(2);
-const flag = (name) => args.includes(`--${name}`);
-const option = (name, fallback) => (args.find((a) => a.startsWith(`--${name}=`)) ?? `=${fallback}`).split("=")[1];
-
 const zones = flag("zones");
-const dir = option("dir", zones ? "out/controle-zones" : "out/controle");
-const comp = option("comp", "PurpleTikTok");
-mkdirSync(dir, { recursive: true });
-
 const shots = [];
 for (const [name, from, to] of SCENES) {
-  shots.push([`${name}-milieu`, Math.round(((from + to) / 2) * FPS)]);
-  // État final : juste avant la sortie de scène (dernière image pour la signature).
-  if (flag("fin")) shots.push([`${name}-fin`, to === END ? END * FPS - 1 : to * FPS - 16]);
+  shots.push({ name: `${name}-milieu`, frame: Math.round(((from + to) / 2) * FPS) });
+  // État final : juste avant la transition de sortie (dernière image pour la signature).
+  if (flag("fin")) shots.push({ name: `${name}-fin`, frame: to === END ? END * FPS - 1 : to * FPS - 20 });
 }
 
-for (const [name, frame] of shots) {
-  const output = `${dir}/${name}.png`;
-  const cli = ["remotion", "still", comp, output, `--frame=${frame}`, "--log=error"];
-  if (zones) cli.push(`--props=${JSON.stringify({ showSafeZones: true })}`);
-  execFileSync("npx", cli, { stdio: "inherit" });
-  console.log(`✓ ${output}  (image ${frame})`);
-}
+await renderStills({
+  comp: option("comp", "PurpleTikTok"),
+  dir: option("dir", zones ? "out/controle-zones" : "out/controle"),
+  inputProps: zones ? { showSafeZones: true } : {},
+  shots,
+});

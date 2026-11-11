@@ -21,6 +21,8 @@ export type DebriefRow = { label: string; delta: string };
 export type PurpleTikTokProps = {
   /** Scène 1 — accroche en deux temps. */
   hook: string[];
+  /** Drapeau à damier (scènes 1 et 6) — vidéo sur fond noir dans public/ ("" pour s'en passer). */
+  flagVideo: string;
   /** Arrêt aux stands — vidéo dans public/ ("" pour s'en passer) et sa légende. */
   pitStopVideo: string;
   pitStopCaption: string;
@@ -36,6 +38,8 @@ export type PurpleTikTokProps = {
   sectors: string[];
   /** Mot géant en contour qui défile derrière la carte (décor). */
   deltaEcho: string;
+  /** Étiquette qui s'allume quand les trois secteurs sont violets ("" pour s'en passer). */
+  deltaBadge: string;
   /** Scène 4 — coach vocal. */
   coachTitle: string;
   coachSubtitle: string;
@@ -54,7 +58,8 @@ export type PurpleTikTokProps = {
 };
 
 export const defaultTexts: PurpleTikTokProps = {
-  hook: ["Tu perds\n# du temps.", "# *Purple*\nsait où."],
+  hook: ["Tu perds\n# du temps.", "# *Purple*\n# sait où."],
+  flagVideo: "drapeau.mp4",
 
   pitStopVideo: "pitstop.mp4",
   pitStopCaption: "Au stand, tout se joue\n# au *dixième*.",
@@ -67,10 +72,11 @@ export const defaultTexts: PurpleTikTokProps = {
   deltaValue: -0.412,
   sectors: ["S1", "S2", "S3"],
   deltaEcho: "VIOLET",
+  deltaBadge: "Meilleur tour",
 
   coachTitle: "Coach vocal",
   coachSubtitle: "Freine 10 mètres plus tard au virage 3.",
-  coachNote: "Pendant que tu roules.",
+  coachNote: "Pendant que\n# *tu roules.*",
 
   debriefLabel: "Débrief",
   debriefTitle: "# Top 3\ndes virages où gagner du temps",

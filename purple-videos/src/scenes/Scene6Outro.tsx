@@ -1,33 +1,38 @@
 import React from "react";
 import { AbsoluteFill, Img, staticFile, useCurrentFrame } from "remotion";
+import { Flag } from "../components/Flag";
 import { KineticTitle } from "../components/Kinetic";
 import { Ring } from "../components/Neon";
-import { FONT_TEXT, FONT_TITLE } from "../fonts";
-import { EASE_IN_OUT, rise, smooth, tween } from "../lib/anim";
+import { displayStyle, upper } from "../components/Text";
+import { FONT_TEXT } from "../fonts";
+import { EASE_IN_OUT, EASE_OUT, rise, smooth, tween } from "../lib/anim";
 import { useStaticFile } from "../lib/useStaticFile";
-import { BEAT, CENTER_X, COLORS, CONTENT, HEIGHT, rgba } from "../theme";
+import { BEAT, CENTER_X, COLORS, CONTENT, HEIGHT, SCENES, rgba } from "../theme";
 
 /** Signature sur la mesure de 18 s, appel à l'action un demi-temps plus tard, « tap » à 19 s. */
 const TAGLINE_AT = 2 * BEAT - 14;
 const CTA_AT = 2.5 * BEAT - 10;
 const TAP_AT = 4 * BEAT - 4;
 
+const DURATION = SCENES.outro.duration;
 const LOGO_FILE = "logo.svg";
-const LOGO_Y = 620;
+const LOGO_Y = 530;
+const TAGLINE_TOP = 776;
+const CTA_TOP = 944;
 
 /** Le logo est le fichier public/logo.svg fourni par Purple : affiché tel quel, jamais redessiné. */
 
 /**
- * Scène 6 (17–20 s) : un faisceau de lumière descend sur le logo, au-dessus d'un
- * horizon courbe ; puis la signature et l'appel à l'action dans un bouton en verre.
- * La dernière image reste posée (pas de fondu).
+ * Scène 6 (19–22 s) : le drapeau à damier se lève en bas de l'image pendant qu'un
+ * faisceau de lumière descend sur le logo ; puis la signature et l'appel à l'action
+ * dans un bouton en verre. La dernière image reste posée (pas de fondu).
  */
-export const SceneOutro: React.FC<{ tagline: string; cta: string; logoFallback: string }> = ({ tagline, cta, logoFallback }) => {
+export const SceneOutro: React.FC<{ tagline: string; cta: string; logoFallback: string; flag: string }> = ({ tagline, cta, logoFallback, flag }) => {
   const frame = useCurrentFrame();
   const logo = useStaticFile(LOGO_FILE, "svg");
   const beam = tween(frame, 0, 30, EASE_IN_OUT);
   const logoIn = smooth(frame, 8);
-  const horizon = tween(frame, 6, 50, EASE_IN_OUT);
+  const flagUp = tween(frame, 0, 56, EASE_OUT);
   const ctaIn = smooth(frame, CTA_AT);
   const tap = tween(frame, TAP_AT, TAP_AT + 34);
   const press = Math.sin(Math.PI * tween(frame, TAP_AT - 2, TAP_AT + 12));
@@ -74,19 +79,28 @@ export const SceneOutro: React.FC<{ tagline: string; cta: string; logoFallback: 
         }}
       />
 
-      {/* Horizon courbe, lumineux sur sa crête (décor, sous la zone utile). */}
+      {/* Drapeau à damier : il se lève derrière la nappe liquide, puis ondule jusqu'à la fin. */}
       <div
         style={{
           position: "absolute",
-          left: CENTER_X - 1500,
-          top: HEIGHT - 520 + (1 - horizon) * 160,
-          width: 3000,
-          height: 3000,
-          borderRadius: "50%",
-          background: COLORS.bg,
-          boxShadow: `0 -12px 70px ${rgba(COLORS.violet, 0.7)}, 0 -3px 18px ${rgba(COLORS.violetLight, 0.55)}, inset 0 30px 90px ${rgba(COLORS.violet, 0.35)}`,
-          filter: "blur(4px)",
-          opacity: horizon,
+          left: -260,
+          right: -260,
+          top: HEIGHT - 980,
+          height: 1240,
+          background: `radial-gradient(closest-side, ${rgba(COLORS.violet, 0.4)} 0%, ${rgba(COLORS.violet, 0.13)} 55%, ${rgba(COLORS.violet, 0)} 100%)`,
+          opacity: flagUp,
+        }}
+      />
+      {/* Le tissu descend peu à peu dans la vidéo source : on le remonte d'autant pour garder la crête en place. */}
+      <Flag video={flag} startAt={0.5} size={1180} offsetY={70 + (1 - flagUp) * 320 - 110 * (frame / DURATION)} />
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 520,
+          background: `linear-gradient(180deg, ${rgba(COLORS.bg, 0)} 0%, ${rgba(COLORS.bg, 0.7)} 100%)`,
         }}
       />
 
@@ -111,9 +125,7 @@ export const SceneOutro: React.FC<{ tagline: string; cta: string; logoFallback: 
         {logo === "ready" ? (
           <Img src={staticFile(LOGO_FILE)} style={{ width: 560, height: 300, objectFit: "contain", filter: `drop-shadow(0 0 60px ${rgba(COLORS.violet, 0.6)})` }} />
         ) : logo === "missing" ? (
-          <div style={{ fontFamily: FONT_TITLE, fontWeight: 800, fontSize: 210, lineHeight: 1, letterSpacing: "-0.02em", color: COLORS.text, textShadow: `0 0 70px ${rgba(COLORS.violet, 0.75)}` }}>
-            {logoFallback}
-          </div>
+          <div style={{ ...displayStyle(224), lineHeight: 1, textShadow: `0 0 70px ${rgba(COLORS.violet, 0.75)}` }}>{upper(logoFallback)}</div>
         ) : null}
       </div>
 
@@ -123,12 +135,13 @@ export const SceneOutro: React.FC<{ tagline: string; cta: string; logoFallback: 
         frame={frame}
         start={TAGLINE_AT}
         stagger={4}
-        bigSize={124}
-        style={{ position: "absolute", left: CONTENT.x, top: 900 }}
+        bigSize={150}
+        align="center"
+        style={{ position: "absolute", left: CONTENT.x, top: TAGLINE_TOP }}
       />
 
       {/* Appel à l'action : bouton en verre, avec un « tap » à 19 s. */}
-      <div style={{ position: "absolute", left: CONTENT.x, width: CONTENT.w, top: 1080, display: "flex", justifyContent: "center", ...rise(ctaIn, 0, { distance: 34 }) }}>
+      <div style={{ position: "absolute", left: CONTENT.x, width: CONTENT.w, top: CTA_TOP, display: "flex", justifyContent: "center", ...rise(ctaIn, 0, { distance: 34 }) }}>
         <div
           style={{
             position: "relative",

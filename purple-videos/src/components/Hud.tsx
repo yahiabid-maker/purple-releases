@@ -4,8 +4,9 @@ import { CLAMP, EASE_IN_OUT } from "../lib/anim";
 import { COLORS, CONTENT, SCENES, rgba } from "../theme";
 
 /**
- * Repères d'interface très discrets aux coins de la zone utile (scènes 2 à 5) :
- * des équerres qui se tracent, comme le cadre d'un écran de télémétrie.
+ * Repères d'interface très discrets en bas de la zone utile (scènes 2 à 5) : deux
+ * équerres qui se tracent, comme le pied d'un écran de télémétrie. Le haut reste
+ * libre : c'est la place des titres.
  */
 const INSET = 14;
 const ARM = 46;
@@ -19,11 +20,8 @@ export const Hud: React.FC = () => {
 
   const x0 = CONTENT.x + INSET;
   const x1 = CONTENT.x + CONTENT.w - INSET;
-  const y0 = CONTENT.y + INSET;
   const y1 = CONTENT.y + CONTENT.h - INSET;
   const corners: [number, number, number, number][] = [
-    [x0, y0, 1, 1],
-    [x1, y0, -1, 1],
     [x0, y1, 1, -1],
     [x1, y1, -1, -1],
   ];
@@ -44,13 +42,16 @@ export const Hud: React.FC = () => {
             strokeDashoffset={1 - draw}
           />
         ))}
-        {/* Petits traits au milieu des bords. */}
-        {[
-          [CONTENT.x + CONTENT.w / 2, y0, 0, 1],
-          [CONTENT.x + CONTENT.w / 2, y1, 0, -1],
-        ].map(([x, y, , dy], i) => (
-          <line key={i} x1={x} y1={y} x2={x} y2={y + dy * 16 * draw} stroke={rgba(COLORS.text, 0.9)} strokeWidth={3} strokeLinecap="round" />
-        ))}
+        {/* Petit trait au milieu du bord bas. */}
+        <line
+          x1={CONTENT.x + CONTENT.w / 2}
+          y1={y1}
+          x2={CONTENT.x + CONTENT.w / 2}
+          y2={y1 - 16 * draw}
+          stroke={rgba(COLORS.text, 0.9)}
+          strokeWidth={3}
+          strokeLinecap="round"
+        />
       </svg>
     </AbsoluteFill>
   );

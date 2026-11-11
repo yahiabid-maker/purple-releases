@@ -36,7 +36,7 @@ const path = (pts: [number, number][], closeX: number) =>
 
 export const LiquidWipe: React.FC = () => {
   const f = useCurrentFrame();
-  const entering = f <= 17;
+  const entering = f <= 14;
 
   let d: string;
   const drops: { x: number; y: number; r: number }[] = [];
@@ -48,7 +48,7 @@ export const LiquidWipe: React.FC = () => {
     ]);
     d = path(pts, -420);
   } else {
-    const t = interpolate(f, [18, 46], [0, 1], CLAMP);
+    const t = interpolate(f, [15, 43], [0, 1], CLAMP);
     const trail = -280 + Easing.bezier(0.45, 0, 0.6, 1)(t) * (WIDTH + 1500);
     const stretch = Easing.out(Easing.quad)(t);
     const pts = YS.map((y): [number, number] => {

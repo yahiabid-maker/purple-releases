@@ -1,8 +1,9 @@
 import React from "react";
 import { AbsoluteFill, Easing, Img, interpolate, interpolateColors, staticFile, useCurrentFrame } from "remotion";
 import { KineticTitle } from "../components/Kinetic";
+import { wipeClip } from "../components/LightLine";
 import { FONT_TITLE } from "../fonts";
-import { CLAMP, EASE_IN, EASE_IN_OUT, pop, smooth, tween } from "../lib/anim";
+import { CLAMP, EASE_IN_OUT, pop, smooth, tween } from "../lib/anim";
 import { type Camera, type Pt, TRACK, TRACK_BOX, photoMatrix, project } from "../lib/track";
 import { useStaticFile } from "../lib/useStaticFile";
 import { COLORS, CONTENT, HEIGHT, SCENES, WIDTH, rgba } from "../theme";
@@ -108,7 +109,6 @@ const photoMask = (soft: number) => {
 export const SceneTrack: React.FC<{ title: string; photo: string }> = ({ title, photo }) => {
   const frame = useCurrentFrame();
   const hasPhoto = useStaticFile(photo, "image") === "ready";
-  const exit = tween(frame, DURATION - 14, DURATION, EASE_IN);
   const cam = cameraAt(frame);
   const P = (p: Pt) => project(p, cam);
 
@@ -152,14 +152,8 @@ export const SceneTrack: React.FC<{ title: string; photo: string }> = ({ title, 
   const gridCenter = P({ x: TRACK_BOX.w / 2, y: TRACK_BOX.h / 2 });
 
   return (
-    <AbsoluteFill
-      style={{
-        opacity: 1 - exit,
-        transform: `scale(${1 + 0.3 * exit})`,
-        transformOrigin: `${END_CAM.anchor.x}px ${END_CAM.anchor.y}px`,
-        filter: exit > 0.01 ? `blur(${(exit * 12).toFixed(2)}px)` : undefined,
-      }}
-    >
+    // Sortie : la ligne de lumière tombe et efface la scène (voir LineWipe).
+    <AbsoluteFill style={{ clipPath: wipeClip(frame, DURATION) }}>
       {/* Photo aérienne, calée sur le tracé : elle dézoome et tourne avec lui. */}
       {photoOpacity > 0.001 ? (
         <div
@@ -193,6 +187,9 @@ export const SceneTrack: React.FC<{ title: string; photo: string }> = ({ title, 
           <mask id="gridMask" maskUnits="userSpaceOnUse" x={0} y={0} width={WIDTH} height={HEIGHT}>
             <rect x={0} y={0} width={WIDTH} height={HEIGHT} fill="url(#gridFade)" />
           </mask>
+          <filter id="neonBloom" x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur stdDeviation="14" />
+          </filter>
           <radialGradient id="cometGlow">
             <stop offset="0%" stopColor={COLORS.violetLight} stopOpacity={0.75} />
             <stop offset="45%" stopColor={COLORS.violet} stopOpacity={0.35} />
@@ -223,6 +220,7 @@ export const SceneTrack: React.FC<{ title: string; photo: string }> = ({ title, 
         {sectors.map((s) =>
           s.on > 0.001 ? (
             <g key={s.i} fill="none" strokeLinecap="round" strokeLinejoin="round" opacity={Math.min(1, s.on * 1.4)}>
+              <path d={s.path} stroke={rgba(COLORS.violet, 0.8)} strokeWidth={26} filter="url(#neonBloom)" />
               <path d={s.path} stroke={rgba(COLORS.violet, 0.35)} strokeWidth={30} />
               <path d={s.path} stroke={COLORS.violet} strokeWidth={13} />
               <path d={s.path} stroke={COLORS.violetLight} strokeWidth={4} />
@@ -308,13 +306,14 @@ export const SceneTrack: React.FC<{ title: string; photo: string }> = ({ title, 
               top: s.label.y,
               transform: `translate(-50%, -50%) scale(${0.6 + 0.4 * bounce})`,
               opacity: Math.min(1, s.on * 1.5),
-              padding: "4px 20px 6px",
-              borderRadius: 22,
+              padding: "4px 24px 6px 20px",
+              borderRadius: 16,
               background: `linear-gradient(180deg, ${rgba(COLORS.violetLight, 0.45)} 0%, ${rgba(COLORS.violet, 0)} 60%), ${COLORS.violet}`,
               boxShadow: `inset 0 0 0 1.5px ${rgba(COLORS.text, 0.35)}, 0 0 30px ${rgba(COLORS.violet, 0.8)}`,
               fontFamily: FONT_TITLE,
+              fontStyle: "italic",
               fontWeight: 800,
-              fontSize: 56,
+              fontSize: 58,
               lineHeight: 1.1,
               color: COLORS.text,
               whiteSpace: "nowrap",
@@ -325,7 +324,7 @@ export const SceneTrack: React.FC<{ title: string; photo: string }> = ({ title, 
         );
       })}
 
-      <KineticTitle text={title} frame={frame} start={8} stagger={6} bigSize={176} style={{ position: "absolute", left: CONTENT.x, top: CONTENT.y + 36 }} />
+      <KineticTitle text={title} frame={frame} start={8} stagger={6} bigSize={196} style={{ position: "absolute", left: CONTENT.x, top: CONTENT.y + 30 }} />
     </AbsoluteFill>
   );
 };

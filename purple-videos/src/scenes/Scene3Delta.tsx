@@ -3,8 +3,9 @@ import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from "remotion";
 import { GlassCard } from "../components/GlassCard";
 import { KineticTitle } from "../components/Kinetic";
 import { Ring } from "../components/Neon";
-import { FONT_MONO, FONT_TEXT, FONT_TITLE } from "../fonts";
-import { CLAMP, sceneExit, smooth, tween } from "../lib/anim";
+import { displayStyle, monoStyle, upper } from "../components/Text";
+import { FONT_TEXT } from "../fonts";
+import { CLAMP, EASE_IN_OUT, pop, sceneExit, smooth, tween } from "../lib/anim";
 import { BEAT, COLORS, CONTENT, SCENES, rgba } from "../theme";
 
 const DURATION = SCENES.delta.duration;
@@ -13,17 +14,19 @@ const DURATION = SCENES.delta.duration;
 const COUNT = { from: 22, to: 100 };
 /** Les puces passent au violet une par temps, à partir de 8 s. */
 const CHIPS_FROM = DURATION / 2 - 5;
+/** Les trois secteurs violets : l'étiquette « meilleur tour » remplace le voyant. */
+const BADGE_AT = CHIPS_FROM + 2 * BEAT + 16;
 
 // Mise en page de la carte (px) : fixée pour que la transition suivante parte de S3.
-const CARD_TOP = 540;
+const CARD_TOP = 468;
 const PAD = 48;
 const INNER = CONTENT.w - 2 * PAD;
 const LABEL_H = 68;
-const DIGIT_SIZE = 196;
+const DIGIT_SIZE = 214;
 const LINE = Math.round(DIGIT_SIZE * 1.1);
 const CELL = Math.round(DIGIT_SIZE * 0.6);
-const CHART_H = 190;
-const CHIP_H = 116;
+const CHART_H = 236;
+const CHIP_H = 126;
 const CHIP_GAP = 20;
 const CHIP_W = (INNER - 2 * CHIP_GAP) / 3;
 const CHIPS_TOP = PAD + LABEL_H + 6 + LINE + 14 + CHART_H + 28;
@@ -98,9 +101,9 @@ const Roller: React.FC<{ offset: number; speed: number; id: string }> = ({ offse
 const Echo: React.FC<{ word: string; frame: number; opacity: number }> = ({ word, frame, opacity }) => (
   <>
     {[
-      { top: CARD_TOP - 40, dx: -260, dir: -1 },
-      { top: CARD_TOP + 260, dx: -700, dir: 1 },
-      { top: CARD_TOP + 560, dx: -380, dir: -1 },
+      { top: CARD_TOP - 30, dx: -260, dir: -1 },
+      { top: CARD_TOP + 270, dx: -700, dir: 1 },
+      { top: CARD_TOP + 570, dx: -380, dir: -1 },
     ].map((row, i) => (
       <div
         key={i}
@@ -109,9 +112,7 @@ const Echo: React.FC<{ word: string; frame: number; opacity: number }> = ({ word
           left: row.dx + row.dir * frame * 1.1,
           top: row.top,
           whiteSpace: "nowrap",
-          fontFamily: FONT_TITLE,
-          fontWeight: 800,
-          fontSize: 300,
+          ...displayStyle(300),
           lineHeight: 1,
           letterSpacing: "0.02em",
           color: "transparent",
@@ -136,15 +137,18 @@ export const SceneDelta: React.FC<{
   value: number;
   sectors: string[];
   echo: string;
-}> = ({ title, label, value, sectors, echo }) => {
+  badge: string;
+}> = ({ title, label, value, sectors, echo, badge }) => {
   const frame = useCurrentFrame();
   const exit = sceneExit(frame, DURATION);
   const cardIn = smooth(frame, 4);
+  const badgeIn = badge ? pop(frame, BADGE_AT) : 0;
 
   const progress = progressAt(frame);
   const current = curveAt(progress, value);
   const previous = curveAt(progressAt(frame - 1), value);
   const settle = Math.sin(tween(frame, COUNT.to - 4, COUNT.to + 40, Easing.out(Easing.quad)) * Math.PI);
+  const streak = tween(frame, COUNT.to - 6, COUNT.to + 20, EASE_IN_OUT);
   const whole = Math.floor(Math.abs(value));
   const sign = value < 0 ? "−" : "+";
 
@@ -164,8 +168,9 @@ export const SceneDelta: React.FC<{
         start={2}
         stagger={4}
         bigSize={150}
+        smallSize={62}
         exit={exit}
-        style={{ position: "absolute", left: CONTENT.x, top: CONTENT.y + 36 }}
+        style={{ position: "absolute", left: CONTENT.x, top: CONTENT.y + 30 }}
       />
 
       <GlassCard
@@ -182,15 +187,44 @@ export const SceneDelta: React.FC<{
       >
         <div style={{ height: LABEL_H, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ fontFamily: FONT_TEXT, fontWeight: 600, fontSize: 56, color: rgba(COLORS.text, 0.72) }}>{label}</div>
-          <div
-            style={{
-              width: 22,
-              height: 22,
-              borderRadius: "50%",
-              background: COLORS.violetLight,
-              boxShadow: `0 0 ${14 + 14 * Math.sin(frame / 9)}px ${COLORS.violet}`,
-            }}
-          />
+          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+            <div
+              style={{
+                position: "absolute",
+                right: 6,
+                width: 22,
+                height: 22,
+                borderRadius: "50%",
+                background: COLORS.violetLight,
+                boxShadow: `0 0 ${14 + 14 * Math.sin(frame / 9)}px ${COLORS.violet}`,
+                opacity: 1 - Math.min(1, badgeIn * 2),
+              }}
+            />
+            {badgeIn > 0.001 ? (
+              <div
+                style={{
+                  position: "relative",
+                  padding: "7px 28px 9px 24px",
+                  opacity: Math.min(1, badgeIn * 1.6),
+                  transform: `scale(${0.6 + 0.4 * badgeIn})`,
+                  transformOrigin: "100% 50%",
+                }}
+              >
+                <Ring x={90} y={32} progress={tween(frame, BADGE_AT + 2, BADGE_AT + 36)} from={40} to={170} />
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    borderRadius: 12,
+                    background: `linear-gradient(180deg, ${rgba(COLORS.violetLight, 0.5)} 0%, ${rgba(COLORS.violet, 0)} 60%), ${COLORS.violet}`,
+                    boxShadow: `0 0 34px ${rgba(COLORS.violet, 0.75)}`,
+                    transform: "skewX(-9deg)",
+                  }}
+                />
+                <div style={{ position: "relative", ...displayStyle(), fontSize: 56, lineHeight: 1, letterSpacing: "0.012em", whiteSpace: "nowrap" }}>{upper(badge)}</div>
+              </div>
+            ) : null}
+          </div>
         </div>
 
         {/* Le delta : JetBrains Mono, chiffres en rouleaux, halo qui s'intensifie à l'arrivée. */}
@@ -201,10 +235,8 @@ export const SceneDelta: React.FC<{
             marginTop: 6,
             marginLeft: -20,
             marginRight: -20,
-            fontFamily: FONT_MONO,
-            fontWeight: 700,
-            fontSize: DIGIT_SIZE,
-            color: COLORS.text,
+            ...monoStyle(DIGIT_SIZE),
+            letterSpacing: 0,
             filter: `drop-shadow(0 0 ${(16 + settle * 26).toFixed(1)}px ${rgba(COLORS.violet, 0.5 + settle * 0.4)})`,
           }}
         >
@@ -220,6 +252,23 @@ export const SceneDelta: React.FC<{
             />
           ))}
         </div>
+
+        {/* À l'instant où le delta se pose, un trait de lumière traverse la carte. */}
+        {streak > 0 && streak < 1 ? (
+          <div
+            style={{
+              position: "absolute",
+              left: `${-40 + streak * 150}%`,
+              top: LABEL_H + 6 + LINE - 10,
+              width: "38%",
+              height: 5,
+              borderRadius: 3,
+              background: `linear-gradient(90deg, ${rgba(COLORS.violet, 0)} 0%, ${COLORS.violetLight} 35%, ${COLORS.text} 50%, ${COLORS.violetLight} 65%, ${rgba(COLORS.violet, 0)} 100%)`,
+              boxShadow: `0 0 26px 5px ${rgba(COLORS.violet, 0.8)}`,
+              opacity: Math.sin(streak * Math.PI),
+            }}
+          />
+        ) : null}
 
         {/* Courbe du delta sur le tour, avec le point lumineux qui la trace. */}
         <svg width={INNER} height={CHART_H} style={{ display: "block", marginTop: 14, overflow: "visible" }}>
@@ -281,9 +330,9 @@ export const SceneDelta: React.FC<{
                   <div
                     style={{
                       position: "relative",
-                      fontFamily: FONT_TITLE,
-                      fontWeight: 800,
-                      fontSize: 66,
+                      ...displayStyle(110),
+                      fontSize: 72,
+                      lineHeight: 1,
                       letterSpacing: "0.01em",
                       color: rgba(COLORS.text, 0.6 + on * 0.4),
                     }}

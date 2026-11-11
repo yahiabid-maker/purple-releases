@@ -1,8 +1,10 @@
 import React from "react";
 import { AbsoluteFill, Easing, interpolateColors, useCurrentFrame } from "remotion";
 import { GlassCard } from "../components/GlassCard";
+import { KineticTitle } from "../components/Kinetic";
+import { wipeClipAt } from "../components/LightLine";
 import { NeonMic, Ring } from "../components/Neon";
-import { titleStyle } from "../components/Text";
+import { displayStyle, upper } from "../components/Text";
 import { FONT_TEXT } from "../fonts";
 import { rise, smooth, tween } from "../lib/anim";
 import { BEAT, CENTER_X, COLORS, CONTENT, SCENES, rgba } from "../theme";
@@ -12,16 +14,17 @@ const DURATION = SCENES.coach.duration;
 /** La phrase du coach est « dite » entre ces deux images ; la note arrive sur le temps de 11,5 s. */
 const SPEECH = { from: 26, to: 132 };
 const NOTE_AT = 3 * BEAT - 6;
+const NOTE_TOP = 1150;
 
 // Mise en page de la carte (px).
-const CARD_TOP = 290;
+const CARD_TOP = 236;
 const PAD = 48;
 const HEADER_H = 120;
 const ORB_ZONE = 430;
-const ORB_SIZE = 200;
+const ORB_SIZE = 232;
 const BARS = 60;
-const BAR_BASE = 128;
-const BAR_MAX = 72;
+const BAR_BASE = 148;
+const BAR_MAX = 78;
 
 /** Centre de la sphère, en coordonnées écran : la transition depuis la scène 3 s'y condense. */
 export const ORB_CENTER = { x: CENTER_X, y: CARD_TOP + PAD + HEADER_H + 24 + ORB_ZONE / 2 };
@@ -58,7 +61,6 @@ const voiceAt = (frame: number, slots: ReturnType<typeof schedule>) => {
  */
 export const SceneCoach: React.FC<{ title: string; subtitle: string; note: string }> = ({ title, subtitle, note }) => {
   const frame = useCurrentFrame();
-  const exit = tween(frame, DURATION - 14, DURATION, Easing.in(Easing.cubic));
   const cardIn = smooth(frame, 6);
   const orbIn = smooth(frame, 12);
   const slots = schedule(subtitle);
@@ -76,22 +78,23 @@ export const SceneCoach: React.FC<{ title: string; subtitle: string; note: strin
           left: CONTENT.x,
           top: CARD_TOP,
           width: CONTENT.w,
-          opacity: Math.min(1, cardIn * 1.2) * (1 - exit),
-          transform: `translate3d(0, ${(1 - cardIn) * 60 - exit * 60}px, 0) scale(${0.95 + cardIn * 0.05})`,
-          filter: exit > 0.01 ? `blur(${(exit * 10).toFixed(2)}px)` : undefined,
+          opacity: Math.min(1, cardIn * 1.2),
+          transform: `translate3d(0, ${(1 - cardIn) * 60}px, 0) scale(${0.95 + cardIn * 0.05})`,
+          // Sortie : la ligne de lumière tombe et efface la carte (voir LineWipe).
+          clipPath: wipeClipAt(frame, DURATION, CARD_TOP),
         }}
       >
         <div style={{ height: HEADER_H, display: "flex", alignItems: "center", gap: 28 }}>
           <div style={{ transform: `scale(${0.6 + 0.4 * smooth(frame, 10)})`, opacity: smooth(frame, 10) }}>
             <NeonMic size={104} glow={0.8 + 0.4 * level} />
           </div>
-          <div style={{ ...titleStyle(120), whiteSpace: "nowrap", ...rise(smooth(frame, 14), 0, { distance: 26 }) }}>{title}</div>
+          <div style={{ ...displayStyle(116), lineHeight: 1, whiteSpace: "nowrap", ...rise(smooth(frame, 14), 0, { distance: 26 }) }}>{upper(title)}</div>
         </div>
 
         {/* Sphère et onde circulaire */}
         <div style={{ position: "relative", height: ORB_ZONE, marginTop: 24 }}>
           {slots.map((slot, i) => (
-            <Ring key={i} x={zoneCenter.x} y={zoneCenter.y} progress={tween(frame, slot.from, slot.from + 46)} from={130} to={300} width={2} />
+            <Ring key={i} x={zoneCenter.x} y={zoneCenter.y} progress={tween(frame, slot.from, slot.from + 46)} from={150} to={330} width={2} />
           ))}
           {Array.from({ length: BARS }, (_, i) => {
             const angle = (i / BARS) * 360;
@@ -162,28 +165,15 @@ export const SceneCoach: React.FC<{ title: string; subtitle: string; note: strin
         </div>
       </GlassCard>
 
-      {/* Petit texte, sous la carte */}
-      <div
-        style={{
-          position: "absolute",
-          left: CONTENT.x,
-          top: 1196,
-          width: CONTENT.w,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 22,
-          fontFamily: FONT_TEXT,
-          fontWeight: 500,
-          fontSize: 56,
-          lineHeight: "72px",
-          color: rgba(COLORS.text, 0.88),
-          ...rise(smooth(frame, NOTE_AT), exit, { distance: 30 }),
-        }}
-      >
-        <div style={{ width: 14, height: 14, borderRadius: "50%", background: COLORS.violet, boxShadow: `0 0 18px ${COLORS.violet}` }} />
-        {note}
-      </div>
+      {/* Sous la carte : la promesse, en grand. */}
+      <KineticTitle
+        text={note}
+        frame={frame}
+        start={NOTE_AT}
+        stagger={5}
+        bigSize={184}
+        style={{ position: "absolute", left: CONTENT.x, top: NOTE_TOP, clipPath: wipeClipAt(frame, DURATION, NOTE_TOP) }}
+      />
     </AbsoluteFill>
   );
 };
