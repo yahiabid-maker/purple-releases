@@ -74,7 +74,8 @@ export const LiquidWipe: React.FC = () => {
     <AbsoluteFill style={{ pointerEvents: "none" }}>
       <svg width={WIDTH} height={HEIGHT}>
         <defs>
-          <linearGradient id="liquid" x1="0" y1="0" x2="1" y2="1">
+          {/* Dégradé fixé à l'écran : il ne bouge pas quand la forme de la nappe change. */}
+          <linearGradient id="liquid" gradientUnits="userSpaceOnUse" x1={0} y1={0} x2={WIDTH} y2={HEIGHT}>
             <stop offset="0%" stopColor="#7A2EF0" />
             <stop offset="55%" stopColor={COLORS.violet} />
             <stop offset="100%" stopColor="#9C5CFF" />
